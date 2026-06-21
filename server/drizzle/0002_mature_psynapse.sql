@@ -1,0 +1,2 @@
+ALTER TABLE "member" ALTER COLUMN "role" SET DEFAULT 'member'::"public"."role_enum";--> statement-breakpoint
+ALTER TABLE "member" ALTER COLUMN "role" SET DATA TYPE "public"."role_enum" USING "role"::"public"."role_enum";

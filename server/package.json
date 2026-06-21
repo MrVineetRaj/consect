@@ -9,10 +9,11 @@
     "dev": "tsx watch src/server.ts",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down -v",
-    "db:generate": "pnpm dlx drizzle-kit generate",
-    "db:migrate": "pnpm dlx drizzle-kit migrate",
-    "db:push": "pnpm dlx drizzle-kit push",
-    "auth:generate": "pnpm dlx auth@latest generate --config src/app/lib/auth.ts"
+    "db:generate": "pnpm exec drizzle-kit generate",
+    "db:migrate": "pnpm exec drizzle-kit migrate",
+    "db:studio": "pnpm exec drizzle-kit studio",
+    "db:push": "pnpm exec drizzle-kit push",
+    "auth:generate": "pnpm exec auth@latest generate --config src/app/lib/auth.ts"
   },
   "keywords": [],
   "author": "",
