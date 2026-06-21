@@ -1,3 +1,4 @@
+import { memberSchema } from "better-auth/plugins";
 import { relations } from "drizzle-orm";
 import {
   pgTable,
@@ -207,11 +208,32 @@ export const conversationMember = pgTable("conversation_member", {
     .notNull(),
 });
 
+export const conversationInvitation = pgTable("", {
+  id: text("id").primaryKey(),
+  senderId: text("user_id")
+    .notNull()
+    .references(() => user.id),
+  forUser: text("user_id")
+    .notNull()
+    .references(() => user.id),
+  conversationId: text("conversation_id")
+    .notNull()
+    .references(() => conversation.id, {
+      onDelete: "cascade",
+    }),
+  role: roleEnum().default("member"),
+  expiry: timestamp("expiry"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
 export const message = pgTable("message", {
   id: text("id").primaryKey(),
   senderId: text("sender_id")
     .notNull()
-    .references(() => user.id),
+    .references(() => user.id,{onDelete:"no action"}),
   conversationId: text("conversation_id")
     .notNull()
     .references(() => conversation.id, { onDelete: "cascade" }),
@@ -257,6 +279,8 @@ export const userRelations = relations(user, ({ many }) => ({
   invitations: many(invitation),
   accessConfigs: many(accessConfig),
   conversationMembers: many(conversationMember),
+  messages: many(message),
+  conversationInvitations: many(conversationInvitation),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -313,12 +337,20 @@ export const accessConfigRelations = relations(accessConfig, ({ one }) => ({
     references: [user.id],
   }),
 }));
-export const conversationRelations = relations(conversation, ({ one }) => ({
-  organization: one(organization, {
-    fields: [conversation.organizationId],
-    references: [organization.id],
+
+export const conversationRelations = relations(
+  conversation,
+  ({ one, many }) => ({
+    organization: one(organization, {
+      fields: [conversation.organizationId],
+      references: [organization.id],
+    }),
+    members: many(conversationMember),
+    conversationMembers: many(conversationMember),
+    messages: many(message),
   }),
-}));
+);
+
 export const conversationMemberRelations = relations(
   conversationMember,
   ({ one }) => ({
@@ -332,7 +364,24 @@ export const conversationMemberRelations = relations(
     }),
   }),
 );
-export const messageRelations = relations(message, ({ one }) => ({
+export const conversationInvitationRelation = relations(
+  conversationInvitation,
+  ({ one }) => ({
+    conversation: one(conversation, {
+      fields: [conversationInvitation.conversationId],
+      references: [conversation.id],
+    }),
+    sender: one(user, {
+      fields: [conversationInvitation.senderId],
+      references: [user.id],
+    }),
+    user: one(user, {
+      fields: [conversationInvitation.forUser],
+      references: [user.id],
+    }),
+  }),
+);
+export const messageRelations = relations(message, ({ one, many }) => ({
   conversation: one(conversation, {
     fields: [message.conversationId],
     references: [conversation.id],
@@ -341,6 +390,7 @@ export const messageRelations = relations(message, ({ one }) => ({
     fields: [message.senderId],
     references: [user.id],
   }),
+  files: many(file),
 }));
 
 export const fileRelations = relations(file, ({ one }) => ({
@@ -356,4 +406,3 @@ export const aiHubResourceRelations = relations(aiHubResource, ({ one }) => ({
     references: [organization.id],
   }),
 }));
-// #endregion
