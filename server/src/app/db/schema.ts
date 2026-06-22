@@ -1,4 +1,3 @@
-import { memberSchema } from "better-auth/plugins";
 import { relations } from "drizzle-orm";
 import {
   pgTable,
@@ -208,12 +207,12 @@ export const conversationMember = pgTable("conversation_member", {
     .notNull(),
 });
 
-export const conversationInvitation = pgTable("", {
+export const conversationInvitation = pgTable("conversation_invitation", {
   id: text("id").primaryKey(),
-  senderId: text("user_id")
+  senderId: text("sender_id")
     .notNull()
     .references(() => user.id),
-  forUser: text("user_id")
+  forUser: text("for_user_id")
     .notNull()
     .references(() => user.id),
   conversationId: text("conversation_id")
@@ -233,7 +232,7 @@ export const message = pgTable("message", {
   id: text("id").primaryKey(),
   senderId: text("sender_id")
     .notNull()
-    .references(() => user.id,{onDelete:"no action"}),
+    .references(() => user.id, { onDelete: "no action" }),
   conversationId: text("conversation_id")
     .notNull()
     .references(() => conversation.id, { onDelete: "cascade" }),

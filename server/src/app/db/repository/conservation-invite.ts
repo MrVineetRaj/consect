@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
 import { db } from "../connection.js";
 import { conversationInvitation } from "../schema.js";
@@ -6,7 +6,7 @@ import { conversationInvitation } from "../schema.js";
 type ConversationInvitationType = typeof conversationInvitation.$inferSelect;
 class Repository {
   async createNewConversationInvitationInvitation(
-    args: Omit<ConversationInvitationType, "id">,
+    args: Omit<ConversationInvitationType, "id" | "createdAt" | "updatedAt">,
   ) {
     const [newConversationInvitation] = await db
       .insert(conversationInvitation)
@@ -17,6 +17,31 @@ class Repository {
       .returning();
 
     return newConversationInvitation;
+  }
+  async createMultipleConversationInvitation(args: {
+    senderId: string;
+    forUsers: string[];
+    conversationId: string;
+    expiry: Date;
+    role: "admin" | "member";
+  }) {
+    const newInvitations = await db
+      .insert(conversationInvitation)
+      .values(
+        args.forUsers.map((forUser) => {
+          return {
+            id: generateBase64String(28),
+            forUser,
+            senderId: args.senderId,
+            conversationId: args.conversationId,
+            expiry: args.expiry,
+            role: args.role,
+          };
+        }),
+      )
+      .returning();
+
+    return newInvitations;
   }
 
   async getConversationInvitationById(args: { id: string }) {
@@ -62,6 +87,21 @@ class Repository {
     await db
       .delete(conversationInvitation)
       .where(eq(conversationInvitation.id, args.id));
+    return true;
+  }
+
+  async deleteMultipleConversationInvitation(args: {
+    invitationIds: string[];
+    senderId: string;
+  }) {
+    await db
+      .delete(conversationInvitation)
+      .where(
+        and(
+          inArray(conversationInvitation.id, args.invitationIds),
+          eq(conversationInvitation.senderId, args.senderId),
+        ),
+      );
     return true;
   }
 }

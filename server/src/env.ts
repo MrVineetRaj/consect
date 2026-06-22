@@ -18,6 +18,7 @@ const EnvSchema = z.object({
   EMAIL_FROM_NAME: z.string().describe("Name for from email"),
   EMAIL_FROM_ADDRESS: z.string().describe("Email address for from email"),
   OPENAI_API_KEY: z.string().describe("API key to access openai llm models"),
+  QDRANT_URL: z.url().describe("URL for the Qdrant vector database"),
 });
 
 const createEnv = () => {

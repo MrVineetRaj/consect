@@ -5,7 +5,9 @@ import { conversationMember } from "../schema.js";
 
 type ConversationMemberType = typeof conversationMember.$inferSelect;
 class Repository {
-  async createNewConversationMember(args: Omit<ConversationMemberType, "id">) {
+  async createNewConversationMember(
+    args: Omit<ConversationMemberType, "id" | "createdAt" | "updatedAt">,
+  ) {
     const [newConversationMember] = await db
       .insert(conversationMember)
       .values({
@@ -24,12 +26,29 @@ class Repository {
 
     return result;
   }
+  async getConversationMembershipOfUser(args: {
+    userId: string;
+    conversationId: string;
+  }) {
+    const result = await db.query.conversationMember.findFirst({
+      where: (fields, { eq, and }) =>
+        and(
+          eq(fields.userId, args.userId),
+          eq(fields.conversationId, args.conversationId),
+        ),
+    });
+
+    return result;
+  }
 
   async getConversationMembersByConversationId(args: {
     conversationId: string;
   }) {
     const result = await db.query.conversationMember.findMany({
       where: (fields, { eq }) => eq(fields.conversationId, args.conversationId),
+      with: {
+        user: true,
+      },
     });
 
     return result;

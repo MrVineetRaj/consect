@@ -1,5 +1,4 @@
-const crypto = require("crypto");
-
+import crypto from "crypto";
 export function generateBase64String(length = 32) {
   return crypto
     .randomBytes(Math.ceil((length * 3) / 4))

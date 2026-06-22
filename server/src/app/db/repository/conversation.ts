@@ -5,7 +5,9 @@ import { conversation, conversationMember, message } from "../schema.js";
 
 type ConversationType = typeof conversation.$inferSelect;
 class Repository {
-  async createNewConversation(args: Omit<ConversationType, "id">) {
+  async createNewConversation(
+    args: Omit<ConversationType, "id" | "createdAt" | "updatedAt">,
+  ) {
     const [newConversation] = await db
       .insert(conversation)
       .values({
@@ -25,7 +27,7 @@ class Repository {
     return result;
   }
 
-  async getUserChannels(args: { userId: string }) {
+  async getUserChannels(args: { userId: string; organizationId: string }) {
     const result = await db
       .select()
       .from(conversation)
@@ -36,6 +38,7 @@ class Repository {
       .where(
         and(
           eq(conversationMember.userId, args.userId),
+          eq(conversation.organizationId, args.organizationId),
           eq(conversation.type, "channel"),
         ),
       );
@@ -46,7 +49,10 @@ class Repository {
     return finalResult;
   }
 
-  async getUserGroupsAndDMs(args: { userId: string }) {
+  async getUserRecentGroupsAndDMs(args: {
+    userId: string;
+    organizationId: string;
+  }) {
     const currentTS = new Date().getTime();
     const last7Days = new Date(currentTS - 7 * 24 * 60 * 60 * 1000);
     const result = await db
@@ -63,8 +69,36 @@ class Repository {
       .where(
         and(
           eq(conversationMember.userId, args.userId),
+          eq(conversation.organizationId, args.organizationId),
           ne(conversation.type, "channel"),
           gte(message.createdAt, last7Days),
+        ),
+      )
+      .groupBy(conversation.id)
+      .orderBy(desc(sql`max(${message.createdAt})`));
+
+    const finalResult = result.map((r) => r.conversation);
+
+    return finalResult;
+  }
+
+  async getUserGroupsAndDMs(args: { userId: string; organizationId: string }) {
+    const result = await db
+      .select({
+        conversation: conversation,
+        lastMessageAt: sql<Date>`max(${message.createdAt})`,
+      })
+      .from(conversation)
+      .innerJoin(
+        conversationMember,
+        eq(conversationMember.conversationId, conversation.id),
+      )
+      .innerJoin(message, eq(message.conversationId, conversation.id))
+      .where(
+        and(
+          eq(conversationMember.userId, args.userId),
+          eq(conversation.organizationId, args.organizationId),
+          ne(conversation.type, "channel"),
         ),
       )
       .groupBy(conversation.id)
