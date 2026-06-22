@@ -1,7 +1,8 @@
 import { betterAuth } from "better-auth";
-import { organization, emailOTP } from "better-auth/plugins";
+import { organization, openAPI } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db/connection.js";
+import * as schema from "../db/schema.js";
 import { env } from "../../env.js";
 
 export const auth = betterAuth({
@@ -15,9 +16,20 @@ export const auth = betterAuth({
   },
   database: drizzleAdapter(db, {
     provider: "pg",
+    schema,
   }),
   baseURL: process.env.BETTER_AUTH_URL,
   trustedOrigins: env.VALID_ORIGINS.split(";"),
+  onAPIError: {
+    // Force Better Auth to throw standard errors when API calls fail on the server
+    throw: true,
+
+    // Custom callback to log or intercept authentication anomalies
+    onError: (error, ctx) => {
+      throw error;
+      // Add custom tracking or notification logic here
+    },
+  },
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
       console.log({ url, user });
@@ -31,7 +43,7 @@ export const auth = betterAuth({
     requireEmailVerification: true,
     revokeSessionsOnPasswordReset: true,
     onExistingUserSignUp: async (_) => {
-      throw new Error("User with this email already exist");
+      // throw new Error("User with this email already exist");
     },
     resetPasswordTokenExpiresIn: 60 * 60,
     autoSignIn: false,
@@ -46,5 +58,5 @@ export const auth = betterAuth({
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
   },
-  plugins: [organization()],
+  plugins: [organization(), openAPI()],
 });

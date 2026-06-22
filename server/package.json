@@ -8,11 +8,14 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down -v",
-    "db:generate": "pnpm dlx drizzle-kit generate",
-    "db:migrate": "pnpm dlx drizzle-kit migrate",
-    "db:push": "pnpm dlx drizzle-kit push",
-    "auth:generate": "pnpm dlx auth@latest generate --config src/app/lib/auth.ts"
+    "docker:down": "docker-compose down",
+    "docker:down-v": "docker-compose down -v",
+    "db:generate": "pnpm exec drizzle-kit generate",
+    "db:migrate": "pnpm exec drizzle-kit migrate",
+    "db:studio": "pnpm exec drizzle-kit studio",
+    "db:push": "pnpm exec drizzle-kit push",
+    "db:seed": "tsx src/app/db/seed.ts",
+    "auth:generate": "pnpm exec auth@latest generate --config src/app/lib/auth.ts"
   },
   "keywords": [],
   "author": "",
@@ -30,12 +33,17 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
+    "@openai/agents": "^0.11.8",
+    "@qdrant/qdrant-js": "^1.18.0",
+    "@scalar/express-api-reference": "^0.10.4",
     "better-auth": "^1.6.19",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
+    "openai": "^6.44.0",
     "pg": "^8.22.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "zod-openapi": "^6.0.0"
   }
 }

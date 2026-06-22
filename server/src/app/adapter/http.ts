@@ -1,18 +1,31 @@
 import { type Request, type Response } from "express";
 import z from "zod";
 import { ResponseCodes } from "../types/codes.js";
+import type {
+  ChannelAccessConfig,
+  OrganizationAccessConfig,
+} from "../types/access-config.js";
 
 class HttpRequest {
   body: Request["body"];
   query: Request["query"];
   params: Request["params"];
   header: Request["header"];
+  accessConfig:
+    | {
+        channel: ChannelAccessConfig | {};
+        organization: OrganizationAccessConfig | {};
+      }
+    | undefined;
+  ctx: Response["ctx"] | undefined;
 
-  constructor(req: Request) {
+  constructor(req: Request, res: Response) {
     this.body = req.body;
     this.query = req.query;
     this.params = req.params;
     this.header = req.header;
+    this.accessConfig = res.accessConfig!;
+    this.ctx = res.ctx;
   }
 }
 
@@ -34,11 +47,6 @@ export class HttpResponse {
     if (result) {
       this.result = result;
     }
-    return {
-      code,
-      message,
-      result,
-    };
   }
 }
 
@@ -49,7 +57,7 @@ export function AsyncHttpHandler(
   return async (req: Request, res: Response) => {
     let result: HttpResponse;
     try {
-      const httpRequest = new HttpRequest(req);
+      const httpRequest = new HttpRequest(req, res);
       if (schema) {
         const validHttpReq = schema.safeParse(httpRequest);
         if (!validHttpReq.success) {
@@ -61,6 +69,7 @@ export function AsyncHttpHandler(
           });
           return;
         }
+        console.log({ validHttpReq, schema });
         result = await fn(validHttpReq.data);
       } else {
         result = await fn();
