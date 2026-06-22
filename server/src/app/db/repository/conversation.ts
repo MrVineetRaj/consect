@@ -76,10 +76,7 @@ class Repository {
       )
       .groupBy(conversation.id)
       .orderBy(desc(sql`max(${message.createdAt})`));
-
-    const finalResult = result.map((r) => r.conversation);
-
-    return finalResult;
+    return result;
   }
 
   async getUserGroupsAndDMs(args: { userId: string; organizationId: string }) {

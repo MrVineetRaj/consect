@@ -236,6 +236,9 @@ export const message = pgTable("message", {
   conversationId: text("conversation_id")
     .notNull()
     .references(() => conversation.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
   parentMessageId: text("parent_message_id"),
   mentions: jsonb("mentions"),
   content: text("content").notNull(),
@@ -302,6 +305,7 @@ export const organizationRelations = relations(organization, ({ many }) => ({
   accessConfigs: many(accessConfig),
   conversations: many(conversation),
   conversationMembers: many(conversationMember),
+  messages: many(message),
 }));
 
 export const memberRelations = relations(member, ({ one }) => ({
@@ -388,6 +392,10 @@ export const messageRelations = relations(message, ({ one, many }) => ({
   user: one(user, {
     fields: [message.senderId],
     references: [user.id],
+  }),
+  organization: one(organization, {
+    fields: [message.organizationId],
+    references: [organization.id],
   }),
   files: many(file),
 }));

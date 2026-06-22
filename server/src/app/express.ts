@@ -7,6 +7,7 @@ import express, {
 import cors from "cors";
 import { apiReference } from "@scalar/express-api-reference";
 import { router as sysRoutes } from "./routes/system/routes.js";
+import { MESSAGE_BASE_PATH, router as messageRoutes } from "./routes/message/routes.js";
 import {
   router as conversationRoutes,
   CONVERSATION_BASE_PATH,
@@ -31,6 +32,7 @@ export function createExpressApp(): Application {
 
   app.use("/api/v1/sys", sysRoutes);
   app.use(CONVERSATION_BASE_PATH, conversationRoutes);
+  app.use(MESSAGE_BASE_PATH, messageRoutes);
 
   // Auto-generated API docs. The document is built from the Zod schemas
   // attached to each route via `createApiRouter`, so it stays in sync.
