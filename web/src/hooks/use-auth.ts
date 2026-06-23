@@ -44,5 +44,22 @@ export function useAuth() {
     return result;
   }
 
-  return { getSession, emailLogin, emailSignup, logout };
+  async function listSessions() {
+    const { data, error } = await authClient.listSessions();
+    return { sessions: data ?? [], error };
+  }
+
+  async function revokeOtherSessions() {
+    const { data, error } = await authClient.revokeOtherSessions();
+    return { data, error };
+  }
+
+  return {
+    getSession,
+    emailLogin,
+    emailSignup,
+    logout,
+    listSessions,
+    revokeOtherSessions,
+  };
 }

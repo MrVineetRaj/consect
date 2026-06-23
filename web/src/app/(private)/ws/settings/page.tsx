@@ -1,4 +1,5 @@
 "use client";
+import { GeneralSettings } from "@/components/settings/general-settings";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -6,7 +7,7 @@ import React, { Suspense } from "react";
 
 const NAVIGATION = [
   { label: "General", tab: "general" },
-  { label: "Account", tab: "account" },
+  // { label: "Account", tab: "account" },
 ] as const;
 
 type SettingsTab = (typeof NAVIGATION)[number]["tab"];
@@ -14,11 +15,12 @@ type SettingsTab = (typeof NAVIGATION)[number]["tab"];
 const SettingsContent = () => {
   const searchParams = useSearchParams();
   const param = searchParams.get("tab");
-  const activeTab: SettingsTab =
-    NAVIGATION.some((it) => it.tab === param) ? (param as SettingsTab) : "general";
+  const activeTab: SettingsTab = NAVIGATION.some((it) => it.tab === param)
+    ? (param as SettingsTab)
+    : "general";
 
   return (
-    <div className="flex h-full">
+    <div className="flex-1 min-h-0 flex">
       <div className="bg-muted w-74 flex flex-col items-end h-full rounded-tr-2xl p-2 gap-2">
         {NAVIGATION.map((it) => (
           <Link
@@ -26,18 +28,16 @@ const SettingsContent = () => {
             href={`/ws/settings?tab=${it.tab}`}
             className={cn(
               "p-2 w-full rounded text-right",
-              activeTab === it.tab
-                && "bg-primary text-white"
-                
+              activeTab === it.tab && "bg-primary text-white",
             )}
           >
             {it.label}
           </Link>
         ))}
       </div>
-      <div className="flex-1 p-6">
-        {activeTab === "general" && <p>General settings</p>}
-        {activeTab === "account" && <p>Account settings</p>}
+      <div className="flex-1 flex flex-col p-6 overflow-hidden">
+        {activeTab === "general" && <GeneralSettings />}
+        {/* {activeTab === "account" && <p>Account settings</p>} */}
       </div>
     </div>
   );
