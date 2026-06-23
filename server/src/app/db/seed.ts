@@ -167,6 +167,7 @@ async function seed() {
         id: generateBase64String(32),
         senderId: sender.id,
         conversationId: conv.id,
+        organizationId: conv.organizationId,
         parentMessageId: null,
         mentions: [],
         content: `Sample message ${i + 1} in ${conv.name ?? "DM"}`,

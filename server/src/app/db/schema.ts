@@ -282,7 +282,12 @@ export const userRelations = relations(user, ({ many }) => ({
   accessConfigs: many(accessConfig),
   conversationMembers: many(conversationMember),
   messages: many(message),
-  conversationInvitations: many(conversationInvitation),
+  sentConversationInvitations: many(conversationInvitation, {
+    relationName: "invitationSender",
+  }),
+  receivedConversationInvitations: many(conversationInvitation, {
+    relationName: "invitationRecipient",
+  }),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -377,10 +382,12 @@ export const conversationInvitationRelation = relations(
     sender: one(user, {
       fields: [conversationInvitation.senderId],
       references: [user.id],
+      relationName: "invitationSender",
     }),
     user: one(user, {
       fields: [conversationInvitation.forUser],
       references: [user.id],
+      relationName: "invitationRecipient",
     }),
   }),
 );
