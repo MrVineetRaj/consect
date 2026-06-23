@@ -36,7 +36,7 @@ export const auth = betterAuth({
     },
     sendOnSignUp: true,
     expiresIn: 3600,
-    redirectTo: "http://localhost:5173/verified",
+    redirectTo: env.FRONTEND_URL + "/ws",
   },
   emailAndPassword: {
     enabled: true,

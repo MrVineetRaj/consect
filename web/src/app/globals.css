@@ -126,4 +126,8 @@
   html {
     @apply font-sans;
   }
+
+  button {
+    @apply cursor-pointer shadow-lg active:scale-80! transition-all duration-200!;
+  }
 }

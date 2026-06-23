@@ -7,7 +7,10 @@ import express, {
 import cors from "cors";
 import { apiReference } from "@scalar/express-api-reference";
 import { router as sysRoutes } from "./routes/system/routes.js";
-import { MESSAGE_BASE_PATH, router as messageRoutes } from "./routes/message/routes.js";
+import {
+  MESSAGE_BASE_PATH,
+  router as messageRoutes,
+} from "./routes/message/routes.js";
 import {
   router as conversationRoutes,
   CONVERSATION_BASE_PATH,
@@ -17,13 +20,16 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
 import { HttpResponse } from "./adapter/http.js";
 import { ResponseCodes } from "./types/codes.js";
+import { env } from "../env.js";
 
 export function createExpressApp(): Application {
   const app: Application = express();
 
   app.use(
     cors({
-      origin: "*",
+      origin: env.VALID_ORIGINS.split(";"),
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      credentials: true,
     }),
   );
 

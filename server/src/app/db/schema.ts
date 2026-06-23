@@ -304,7 +304,7 @@ export const organizationRelations = relations(organization, ({ many }) => ({
   invitations: many(invitation),
   accessConfigs: many(accessConfig),
   conversations: many(conversation),
-  conversationMembers: many(conversationMember),
+  // conversationMembers: many(conversationMember),
   messages: many(message),
 }));
 
