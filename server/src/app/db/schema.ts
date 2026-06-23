@@ -160,6 +160,18 @@ export const invitation = pgTable(
 );
 // #endregion
 
+export const userPreference = pgTable("user_preference", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
 export const accessConfig = pgTable("access_config", {
   id: text("id").primaryKey(),
   userId: text("user_id")
@@ -274,7 +286,7 @@ export const aiHubResource = pgTable("ai_hub_resource", {
     .notNull(),
 });
 
-export const userRelations = relations(user, ({ many }) => ({
+export const userRelations = relations(user, ({ many, one }) => ({
   sessions: many(session),
   accounts: many(account),
   members: many(member),
@@ -282,7 +294,12 @@ export const userRelations = relations(user, ({ many }) => ({
   accessConfigs: many(accessConfig),
   conversationMembers: many(conversationMember),
   messages: many(message),
-  conversationInvitations: many(conversationInvitation),
+  sentConversationInvitations: many(conversationInvitation, {
+    relationName: "invitationSender",
+  }),
+  receivedConversationInvitations: many(conversationInvitation, {
+    relationName: "invitationRecipient",
+  }),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -304,7 +321,7 @@ export const organizationRelations = relations(organization, ({ many }) => ({
   invitations: many(invitation),
   accessConfigs: many(accessConfig),
   conversations: many(conversation),
-  conversationMembers: many(conversationMember),
+  // conversationMembers: many(conversationMember),
   messages: many(message),
 }));
 
@@ -377,10 +394,12 @@ export const conversationInvitationRelation = relations(
     sender: one(user, {
       fields: [conversationInvitation.senderId],
       references: [user.id],
+      relationName: "invitationSender",
     }),
     user: one(user, {
       fields: [conversationInvitation.forUser],
       references: [user.id],
+      relationName: "invitationRecipient",
     }),
   }),
 );
@@ -411,5 +430,12 @@ export const aiHubResourceRelations = relations(aiHubResource, ({ one }) => ({
   organization: one(organization, {
     fields: [aiHubResource.organizationId],
     references: [organization.id],
+  }),
+}));
+
+export const userPreferenceRelations = relations(userPreference, ({ one }) => ({
+  user: one(user, {
+    fields: [userPreference.userId],
+    references: [user.id],
   }),
 }));

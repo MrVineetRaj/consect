@@ -1,0 +1,1 @@
+ALTER TABLE "user_preference" RENAME COLUMN "workspace_id" TO "organization_id";

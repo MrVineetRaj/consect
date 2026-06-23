@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { organization, openAPI } from "better-auth/plugins";
+import { organization, openAPI, bearer } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db/connection.js";
 import * as schema from "../db/schema.js";
@@ -36,7 +36,7 @@ export const auth = betterAuth({
     },
     sendOnSignUp: true,
     expiresIn: 3600,
-    redirectTo: "http://localhost:5173/verified",
+    redirectTo: env.FRONTEND_URL + "/ws",
   },
   emailAndPassword: {
     enabled: true,
@@ -58,5 +58,5 @@ export const auth = betterAuth({
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
   },
-  plugins: [organization(), openAPI()],
+  plugins: [organization(), openAPI(), bearer()],
 });
