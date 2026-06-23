@@ -15,6 +15,14 @@ import {
   router as conversationRoutes,
   CONVERSATION_BASE_PATH,
 } from "./routes/conversation/routes.js";
+import {
+  router as userPreferenceRoutes,
+  USER_PREFERENCE_BASE_PATH,
+} from "./routes/user-preference/routes.js";
+import {
+  router as organizationRoutes,
+  ORGANIZATION_BASE_PATH,
+} from "./routes/organization/routes.js";
 import { buildOpenApiDocument } from "./adapter/openapi.js";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
@@ -39,6 +47,8 @@ export function createExpressApp(): Application {
   app.use("/api/v1/sys", sysRoutes);
   app.use(CONVERSATION_BASE_PATH, conversationRoutes);
   app.use(MESSAGE_BASE_PATH, messageRoutes);
+  app.use(USER_PREFERENCE_BASE_PATH, userPreferenceRoutes);
+  app.use(ORGANIZATION_BASE_PATH, organizationRoutes);
 
   // Auto-generated API docs. The document is built from the Zod schemas
   // attached to each route via `createApiRouter`, so it stays in sync.

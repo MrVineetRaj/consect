@@ -1,6 +1,8 @@
 import React from "react";
 import { Navigation } from "./navigation";
 import { SideBottomActions } from "./side-bottom-actions";
+import { OrganizationModel } from "./organizations-model";
+import { CommandSlit } from "./command-slit";
 
 export const WorkspaceShell = ({
   children,
@@ -14,9 +16,10 @@ export const WorkspaceShell = ({
         <SideBottomActions />
       </aside>
       <main className="bg-background w-full h-full rounded-lg flex flex-col overflow-hidden">
-        <div className="w-full p-2 min-h-12">Command Slit</div>
+        <CommandSlit />
         {children}
       </main>
+      <OrganizationModel />
     </div>
   );
 };
