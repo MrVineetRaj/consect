@@ -16,5 +16,16 @@ export function useAuthServer() {
 
     return data;
   }
-  return { getServerSession };
+
+  async function listOrganizationMembersServer(organizationId: string) {
+    const { data } = await authClient.organization.listMembers({
+      query: {
+        organizationId: organizationId,
+      },
+      fetchOptions: { headers: await headers() },
+    });
+    return data;
+  }
+
+  return { getServerSession, listOrganizationMembersServer };
 }

@@ -14,7 +14,7 @@ const SIDE_NAV = [
   {
     icon: HomeIcon,
     label: "Home",
-    href: "/ws",
+    href: "/ws/home",
   },
   {
     icon: StarsIcon,
@@ -42,7 +42,7 @@ export const Navigation = () => {
   return (
     <nav className="flex flex-col items-center gap-1.5">
       {SIDE_NAV.map((nav) => {
-        const isActive = pathname == nav.href.split("#")[0];
+        const isActive = pathname.includes(nav.href);
         return (
           <Link
             href={nav.href}

@@ -45,6 +45,9 @@ class Repository {
           eq(fields.conversationId, args.conversationId),
           eq(fields.organizationId, args.organizationId),
         ),
+      with: {
+        sender: true,
+      },
     });
 
     return result;

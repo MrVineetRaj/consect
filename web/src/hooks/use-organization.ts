@@ -1,7 +1,13 @@
+import { authClient } from "@/lib/auth";
 import { axiosClient } from "@/lib/axios";
 import { AxiosError } from "axios";
 
 export function useOrganizationClient() {
+  async function listOrganizationMembers(organizationId:string){
+    const res = await authClient.organization.listMembers();
+
+
+  }
   async function listOrganizations(token: string) {
     try {
       const res = await axiosClient.get("/organization", {

@@ -8,7 +8,7 @@ import type {
   CreateNewConversationPropType,
   DeleteMultipleSentInvitePropType,
   ListConversationMemberPropType,
-  ListConversationsPropType,
+  ListRecentConversationsPropType,
   SendInvitePropType,
 } from "./schema.js";
 
@@ -31,7 +31,7 @@ class Controller {
     });
   }
 
-  async listConversations({ ctx }: ListConversationsPropType) {
+  async listRecentConversations({ ctx }: ListRecentConversationsPropType) {
     const channels = await conversationRepository.getUserChannels({
       userId: ctx.userId,
       organizationId: ctx.organizationId,

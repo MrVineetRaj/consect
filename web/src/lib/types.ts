@@ -27,3 +27,49 @@ interface IOrganization {
   createdAt: Date;
   role: OrganizationRole;
 }
+
+interface IConversation {
+  id: string;
+  name: string | null;
+  organizationId: string;
+  type: "group" | "dm" | "channel" | null;
+  description: string | null;
+  image?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface IOrganizationMembers {
+  id: string;
+  organizationId: string;
+  role: "member" | "admin" | "owner";
+  createdAt: Date;
+  userId: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    image?: string | undefined | null;
+  };
+}
+interface ConversationMember {
+  id: string;
+  userId: string;
+  role: string | null;
+  name: string;
+  email: string;
+  image: string | null;
+}
+
+interface IMessage {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  organizationId: string;
+  conversationId: string;
+  senderId: string;
+  parentMessageId: string | null;
+  mentions: unknown;
+  content: string;
+  sender: IUser;
+}

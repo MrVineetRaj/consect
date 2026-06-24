@@ -37,17 +37,17 @@ export type CreateNewConversationPropType = z.infer<
   typeof CreateNewConversationSchema
 >;
 
-export const ListConversationsInputSchema = z.object({
+export const ListRecentConversationsInputSchema = z.object({
   ctx: z.object({
     organizationId: z.string().nonempty(),
     userId: z.string(),
   }),
 });
-export type ListConversationsPropType = z.infer<
-  typeof ListConversationsInputSchema
+export type ListRecentConversationsPropType = z.infer<
+  typeof ListRecentConversationsInputSchema
 >;
 
-export const ListConversationsHeadersSchema = z.object({
+export const ListRecentConversationsHeadersSchema = z.object({
   [HeaderKeys.organizationId]: z.string().meta({
     description: "Organization the conversation belongs to.",
   }),

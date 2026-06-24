@@ -59,6 +59,7 @@ export function createExpressApp(): Application {
   app.use("/docs", apiReference({ content: openApiDoc }));
 
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.log(err);
     res.status(500).json({
       ...new HttpResponse({
         code: ResponseCodes.INTERNAL_SERVER_ERROR,

@@ -65,9 +65,12 @@ export const OrganizationModel = () => {
     const res = await updateUserPreference(token, { organizationId });
     if (res.success && res.result) {
       setUserPreference({ userPreference: res.result });
-    } else {
-      toast.error(res.message ?? "Failed to select organization");
+      // Org changed: hard-reload so every server component re-fetches for the
+      // new organization. Land on /ws since deep ids belong to the old org.
+      window.location.assign("/ws");
+      return;
     }
+    toast.error(res.message ?? "Failed to select organization");
     setSelectingId(null);
   }
 
