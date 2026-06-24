@@ -49,14 +49,21 @@ export const Navigation = () => {
             key={nav.href}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "group flex w-full flex-col items-center gap-1 rounded-xl px-1.5 py-2",
+              "group relative flex w-full flex-col items-center gap-1 rounded-2xl px-1.5 py-2",
               "transition-all duration-200 ease-out",
-              "text-muted-foreground hover:text-foreground",
-              "hover:bg-background/60",
+              "text-muted-foreground hover:text-foreground hover:bg-background/70",
               isActive &&
-                "bg-background text-foreground shadow-sm hover:bg-background",
+                "bg-primary/10 text-primary ring-1 ring-primary/20 hover:bg-primary/10",
             )}
           >
+            {/* Active indicator bar on the rail edge */}
+            <span
+              className={cn(
+                "absolute -left-3 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-primary",
+                "transition-all duration-200 ease-out",
+                isActive ? "opacity-100 scale-100" : "opacity-0 scale-0",
+              )}
+            />
             <nav.icon
               className={cn(
                 "size-5 transition-transform duration-200 ease-out",
@@ -67,7 +74,7 @@ export const Navigation = () => {
             <span
               className={cn(
                 "text-[10px] leading-none font-medium tracking-tight text-center",
-                isActive && "text-foreground",
+                isActive && "text-primary",
               )}
             >
               {nav.label}

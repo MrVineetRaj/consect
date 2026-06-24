@@ -94,7 +94,7 @@ export const ActiveSessions = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between my-8">
+      <div className="flex items-center justify-between mt-5 mb-4">
         <Label className="text-muted-foreground">Active Sessions</Label>
         {hasOtherSessions && (
           <Button
