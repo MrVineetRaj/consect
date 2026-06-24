@@ -22,7 +22,6 @@ const WorkspaceLayout = async ({
 
   const pref = await getUserPreference(session.session.token);
 
-  console.log(pref);
 
   // if (!pref.success) {
   //   redirect("/");

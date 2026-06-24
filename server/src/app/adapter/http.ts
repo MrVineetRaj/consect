@@ -69,7 +69,7 @@ export function AsyncHttpHandler(
           });
           return;
         }
-        console.log({ validHttpReq, schema });
+        
         result = await fn(validHttpReq.data);
       } else {
         result = await fn();
