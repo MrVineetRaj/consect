@@ -89,7 +89,7 @@ export const AuthForm = () => {
             e.preventDefault();
             if (isSignup) {
               emailSignup({ email, password, name: fullName }).then((res) => {
-                console.log(res);
+                
               });
             } else {
               emailLogin({ email, password }).then((res) => {
