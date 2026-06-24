@@ -408,7 +408,7 @@ export const messageRelations = relations(message, ({ one, many }) => ({
     fields: [message.conversationId],
     references: [conversation.id],
   }),
-  user: one(user, {
+  sender: one(user, {
     fields: [message.senderId],
     references: [user.id],
   }),

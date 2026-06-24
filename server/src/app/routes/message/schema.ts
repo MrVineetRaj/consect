@@ -46,6 +46,7 @@ export const ListMessagesInputSchema = z.object({
   ctx: z.object({
     conversationId: z.string().nonempty(),
     organizationId: z.string(),
+    userId: z.string(),
   }),
 });
 

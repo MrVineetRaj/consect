@@ -5,8 +5,8 @@ import {
   CreateNewConversationSchema,
   CreateNewConversationResponseSchema,
   CreateNewConversationHeadersSchema,
-  ListConversationsInputSchema,
-  ListConversationsHeadersSchema,
+  ListRecentConversationsInputSchema,
+  ListRecentConversationsHeadersSchema,
   SendInviteInputSchema,
   SendInviteHeadersSchema,
   DeleteMultipleSentInviteInputSchema,
@@ -29,12 +29,12 @@ api.post("/", authMiddleware, {
   tags: ["Conversation"],
 });
 
-api.get("/", authMiddleware, {
-  schema: ListConversationsInputSchema,
+api.get("/recent", authMiddleware, {
+  schema: ListRecentConversationsInputSchema,
   response: CreateNewConversationResponseSchema,
-  headers: ListConversationsHeadersSchema,
+  headers: ListRecentConversationsHeadersSchema,
   auth: true,
-  handler: controller.listConversations.bind(controller),
+  handler: controller.listRecentConversations.bind(controller),
   summary: "List all conversations",
   tags: ["Conversation"],
 });

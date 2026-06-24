@@ -27,6 +27,7 @@ api.post("/", authMiddleware, {
   tags: ["Message"],
 });
 
+
 api.get("/", authMiddleware, {
   schema: ListMessagesInputSchema,
   response: CreateNewConversationResponseSchema,

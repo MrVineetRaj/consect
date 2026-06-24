@@ -1,5 +1,7 @@
 import { HttpResponse } from "../../adapter/http.js";
+import { conversationMemberRepository } from "../../db/repository/conservation-member.js";
 import { messageRepository } from "../../db/repository/messages.js";
+import { auth } from "../../lib/auth.js";
 import { ResponseCodes } from "../../types/codes.js";
 import type {
   CreateNewMessagePropType,
@@ -10,6 +12,18 @@ import type {
 
 class Controller {
   async newMessage({ ctx, body }: CreateNewMessagePropType) {
+    const memberShip =
+      await conversationMemberRepository.getConversationMembershipOfUser({
+        userId: ctx.userId,
+        conversationId: ctx.conversationId,
+      });
+
+    if (!memberShip) {
+      return new HttpResponse({
+        code: ResponseCodes.FORBIDDEN,
+        message: "You are not member of this conversation",
+      });
+    }
     const result = await messageRepository.createNewMessage({
       senderId: ctx.userId,
       conversationId: ctx.conversationId,
@@ -28,6 +42,18 @@ class Controller {
   }
 
   async listMessages({ ctx }: ListMessagesPropType) {
+    const memberShip =
+      await conversationMemberRepository.getConversationMembershipOfUser({
+        userId: ctx.userId,
+        conversationId: ctx.conversationId,
+      });
+
+    if (!memberShip) {
+      return new HttpResponse({
+        code: ResponseCodes.FORBIDDEN,
+        message: "You are not member of this conversation",
+      });
+    }
     const result = await messageRepository.getMessagesByConversationId({
       conversationId: ctx.conversationId,
       organizationId: ctx.organizationId,

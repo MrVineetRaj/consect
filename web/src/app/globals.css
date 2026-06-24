@@ -130,4 +130,21 @@
   button {
     @apply cursor-pointer shadow-lg active:scale-80! transition-all duration-200!;
   }
+
+  kbd {
+    display: inline-block;
+    padding: 0.1rem 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1;
+    color: var(--foreground);
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 1px 0 var(--border);
+  }
+}
+
+.mention {
+  @apply text-primary bg-primary/10 px-2
 }

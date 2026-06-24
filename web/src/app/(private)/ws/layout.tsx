@@ -12,7 +12,7 @@ const WorkspaceLayout = async ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  const { getServerSession } = useAuthServer();
+  const { getServerSession, listOrganizationMembersServer } = useAuthServer();
   const { getUserPreference } = usePreferenceClient();
   const session = await getServerSession();
 
@@ -21,17 +21,20 @@ const WorkspaceLayout = async ({
   }
 
   const pref = await getUserPreference(session.session.token);
-
-
-  // if (!pref.success) {
-  //   redirect("/");
-  // }
-
+  const organizationId = pref.result?.organizationId;
+  const orgMemberResult = organizationId
+    ? await listOrganizationMembersServer(organizationId)
+    : null;
   return (
     <StoreProvider
       user={session.user}
       token={session.session.token}
       userPreference={pref.result}
+      orgMembers={
+        orgMemberResult?.members?.filter(
+          (mem) => mem.userId != session.user.id,
+        ) ?? []
+      }
     >
       <WorkspaceShell>{children}</WorkspaceShell>
     </StoreProvider>
