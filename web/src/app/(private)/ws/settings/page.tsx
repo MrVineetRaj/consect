@@ -1,13 +1,14 @@
 "use client";
 import { GeneralSettings } from "@/components/settings/general-settings";
 import { cn } from "@/lib/utils";
+import { UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { Suspense } from "react";
 
 const NAVIGATION = [
-  { label: "General", tab: "general" },
-  // { label: "Account", tab: "account" },
+  { label: "General", tab: "general", icon: UserIcon },
+  // { label: "Account", tab: "account", icon: ShieldIcon },
 ] as const;
 
 type SettingsTab = (typeof NAVIGATION)[number]["tab"];
@@ -21,21 +22,31 @@ const SettingsContent = () => {
 
   return (
     <div className="flex-1 min-h-0 flex">
-      <div className="bg-muted w-74 flex flex-col items-end h-full rounded-tr-2xl p-2 gap-2">
-        {NAVIGATION.map((it) => (
-          <Link
-            key={it.tab}
-            href={`/ws/settings?tab=${it.tab}`}
-            className={cn(
-              "p-2 w-full rounded text-right",
-              activeTab === it.tab && "bg-primary text-white",
-            )}
-          >
-            {it.label}
-          </Link>
-        ))}
-      </div>
-      <div className="flex-1 flex flex-col p-6 overflow-hidden">
+      <aside className="flex w-60 flex-col gap-1 border-r border-border/60 p-3">
+        <h2 className="px-3 pb-2 text-lg font-semibold tracking-tight">
+          Settings
+        </h2>
+        {NAVIGATION.map((it) => {
+          const isActive = activeTab === it.tab;
+          return (
+            <Link
+              key={it.tab}
+              href={`/ws/settings?tab=${it.tab}`}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium",
+                "transition-colors duration-200",
+                "text-muted-foreground hover:bg-muted hover:text-foreground",
+                isActive && "bg-primary/10 text-primary hover:bg-primary/10",
+              )}
+            >
+              <it.icon className="size-4" />
+              {it.label}
+            </Link>
+          );
+        })}
+      </aside>
+      <div className="flex-1 min-h-0 overflow-auto">
         {activeTab === "general" && <GeneralSettings />}
         {/* {activeTab === "account" && <p>Account settings</p>} */}
       </div>

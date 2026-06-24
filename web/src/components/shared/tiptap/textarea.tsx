@@ -78,7 +78,7 @@ const MenuBar = ({ editor }: { editor: Editor }) => {
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 p-1">
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-border/60 px-1.5 py-1">
       {buttons.map(({ icon: Icon, label, isActive, onClick }) => (
         <button
           key={label}
@@ -88,8 +88,8 @@ const MenuBar = ({ editor }: { editor: Editor }) => {
           aria-pressed={isActive()}
           onClick={onClick}
           className={cn(
-            "flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-            isActive() && "bg-accent text-foreground",
+            "flex size-7 items-center justify-center rounded-md text-muted-foreground shadow-none transition-colors hover:bg-muted hover:text-foreground",
+            isActive() && "bg-primary/10 text-primary hover:bg-primary/10",
           )}
         >
           <Icon className="size-4" />
@@ -175,14 +175,11 @@ export const TiptapTextArea = forwardRef<TiptapHandle, TiptapTextAreaProps>(
     if (!editor) return null;
 
     return (
-      <div className="flex flex-col w-full">
+      <div className="flex w-full flex-col">
         <MenuBar editor={editor} />
-        <div className="rounded-lg bg-background/60 overflow-hidden min-h-20 max-h-40 w-full">
+        <div className="max-h-40 min-h-20 w-full overflow-y-auto">
           <EditorContent editor={editor} />
         </div>
-        <p className="text-xs">
-          <kbd>Cmd</kbd>+<kbd>Enter</kbd> to submit.
-        </p>
       </div>
     );
   },

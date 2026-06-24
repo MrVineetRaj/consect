@@ -86,7 +86,7 @@ const OrganizationSwitcher = () => {
 
 export const CommandSlit = () => {
   return (
-    <div className="w-full p-2 min-h-12 flex items-center gap-2">
+    <div className="w-full px-3 py-2 min-h-12 flex items-center gap-2 border-b border-border/60">
       <OrganizationSwitcher />
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
