@@ -39,6 +39,21 @@ interface IConversation {
   updatedAt: Date;
 }
 
+type AiHubResourceType = "doc" | "pdf" | "url" | "text" | "md";
+
+interface IAiHubResource {
+  id: string;
+  organizationId: string | null;
+  type: AiHubResourceType | null;
+  allowedChannelIds: string[] | null;
+  tags: string[] | null;
+  publicId: string;
+  secureURL: string;
+  embeddingId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 interface IOrganizationMembers {
   id: string;
   organizationId: string;

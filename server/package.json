@@ -37,6 +37,7 @@
     "@qdrant/qdrant-js": "^1.18.0",
     "@scalar/express-api-reference": "^0.10.4",
     "better-auth": "^1.6.19",
+    "cloudinary": "^2.10.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",

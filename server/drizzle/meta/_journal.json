@@ -43,6 +43,13 @@
       "when": 1782209618328,
       "tag": "0005_graceful_kulan_gath",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782354508961,
+      "tag": "0006_flowery_prism",
+      "breakpoints": true
     }
   ]
 }

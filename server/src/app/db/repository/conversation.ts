@@ -27,6 +27,21 @@ class Repository {
     return result;
   }
 
+  async getConversationByIds(args: {
+    ids: string[];
+    conversationType: "dm" | "channel" | "group";
+  }) {
+    const result = await db.query.conversation.findFirst({
+      where: (fields, { inArray, and, eq }) =>
+        and(
+          inArray(fields.id, args.ids),
+          eq(fields.type, args.conversationType),
+        ),
+    });
+
+    return result;
+  }
+
   async getUserChannels(args: { userId: string; organizationId: string }) {
     const result = await db
       .select()

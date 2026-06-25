@@ -279,6 +279,8 @@ export const aiHubResource = pgTable("ai_hub_resource", {
   type: resourceTypeEnum("type"),
   allowedChannelIds: jsonb("allowed_channel_id"),
   tags: jsonb("tags"),
+  publicId: text("public_id").notNull(),
+  secureURL:text("secure_url").notNull(),
   embeddingId: text("embedding_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")

@@ -23,6 +23,10 @@ import {
   router as organizationRoutes,
   ORGANIZATION_BASE_PATH,
 } from "./routes/organization/routes.js";
+import {
+  router as aiHubRoutes,
+  AI_HUB_BASE_PATH,
+} from "./routes/ai-hub/routes.js";
 import { buildOpenApiDocument } from "./adapter/openapi.js";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
@@ -41,7 +45,9 @@ export function createExpressApp(): Application {
     }),
   );
 
-  app.use(express.json());
+  // Resources uploaded to the AI Hub arrive as base64 data URIs in the JSON
+  // body, which easily exceeds the 100kb default.
+  app.use(express.json({ limit: "25mb" }));
   app.all("/api/auth/*all", toNodeHandler(auth)); // For ExpressJS v4
 
   app.use("/api/v1/sys", sysRoutes);
@@ -49,6 +55,7 @@ export function createExpressApp(): Application {
   app.use(MESSAGE_BASE_PATH, messageRoutes);
   app.use(USER_PREFERENCE_BASE_PATH, userPreferenceRoutes);
   app.use(ORGANIZATION_BASE_PATH, organizationRoutes);
+  app.use(AI_HUB_BASE_PATH, aiHubRoutes);
 
   // Auto-generated API docs. The document is built from the Zod schemas
   // attached to each route via `createApiRouter`, so it stays in sync.

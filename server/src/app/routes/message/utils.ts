@@ -18,10 +18,10 @@ export async function invokeLLMForMessage({
   const llmResponse = await llmClient.getLLMResponse({
     userPrompt: body.content,
     systemPrompt:
-      "You are consecto a powerful helping assistant who helps people in a chat room which could be of one member two member or multiple members so you have to look at old messges which are mapped by userIds of user or consecto if a message is sent b you so please response accordingly",
+      "You are consecto a powerful helping assistant who helps people in a chat room which could be of one member two member or multiple members so you have to look at old messges which are mapped by userIds of user or consecto if a message is sent b you so please response accordingly also it is possible that user just tagged you it means there is old response then your current message in developer prompt list of old messages so if nothing in user query then look into most recent messages according to createdAt and look then reply and then reply and please send you messages in html formate not markdown please make no mistakes",
     developerPrompt: `Old messages are 
             eg structure : <userId>12345</userId> || <message> actual message </message> || <createdAt> timestamp when it was created</createdAt>
-            ${oldMessages.map((msg) => `<userId>${msg.senderId}</userId> || <message>${msg.content}</message> || <createdAt>${msg.createdAt}</createdAt>`)}
+            ${oldMessages.reverse().map((msg) => `<userId>${msg.senderId}</userId> || <message>${msg.content}</message> || <createdAt>${msg.createdAt}</createdAt>`)}
             `,
   });
 
