@@ -1,4 +1,5 @@
 "use client";
+import { icons } from "@/lib/assets";
 import { useOrganizationStore } from "@/store/organization-store";
 import { useUserPreferenceStore } from "@/store/user-preference-store";
 import { useUserStore } from "@/store/user-store";
@@ -29,7 +30,6 @@ export const StoreProvider = ({
   }, [userPreference]);
 
   useEffect(() => {
-    console.log(orgMembers);
     setOrganizationMembers(orgMembers);
   }, [orgMembers]);
   return <>{children}</>;
