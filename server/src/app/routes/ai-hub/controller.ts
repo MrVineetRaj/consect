@@ -32,6 +32,14 @@ class Controller {
       embeddingId,
     });
 
+    fetch("http://localhost:8000/embed_document", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(result),
+    });
+
     return new HttpResponse({
       code: ResponseCodes.CREATED,
       message: "Resource added to AI Hub",
