@@ -38,6 +38,11 @@ class Controller {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(result),
+    }).catch((e) => {
+      return new HttpResponse({
+        code: ResponseCodes.SERVICE_UNAVAILABLE,
+        message: "Failed to embed document",
+      });
     });
 
     return new HttpResponse({

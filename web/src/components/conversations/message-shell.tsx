@@ -122,7 +122,6 @@ export const MessageShell = ({
   const { sendMessage } = useMessageClient();
 
   useEffect(() => {
-    console.log(initMessages);
     setMessages(initMessages);
   }, [initMessages]);
 

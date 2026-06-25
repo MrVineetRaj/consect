@@ -33,6 +33,10 @@ import { auth } from "./lib/auth.js";
 import { HttpResponse } from "./adapter/http.js";
 import { ResponseCodes } from "./types/codes.js";
 import { env } from "../env.js";
+import {
+  router as webhookRoutes,
+  WEBHOOK_BASE_PATH,
+} from "./routes/webhook/routes.js";
 
 export function createExpressApp(): Application {
   const app: Application = express();
@@ -56,6 +60,7 @@ export function createExpressApp(): Application {
   app.use(USER_PREFERENCE_BASE_PATH, userPreferenceRoutes);
   app.use(ORGANIZATION_BASE_PATH, organizationRoutes);
   app.use(AI_HUB_BASE_PATH, aiHubRoutes);
+  app.use(WEBHOOK_BASE_PATH, webhookRoutes);
 
   // Auto-generated API docs. The document is built from the Zod schemas
   // attached to each route via `createApiRouter`, so it stays in sync.

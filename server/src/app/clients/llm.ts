@@ -5,13 +5,13 @@ import type z from "zod";
 
 class LLMClient {
   private client;
-  private agent;
+  // private agent;
   constructor() {
     this.client = new OpenAI();
-    this.agent = new Agent({
-      name: "consecto",
-      model: "gpt-5.4-min",
-    });
+    // this.agent = new Agent({
+    //   name: "consecto",
+    //   model: "gpt-5.4-mini",
+    // });
   }
 
   async getEmbeddings(args: { text: string }) {

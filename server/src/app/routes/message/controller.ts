@@ -38,7 +38,12 @@ class Controller {
     // todo : announce message to socket
 
     if (body.mentions.includes("consecto")) {
-      invokeLLMForMessage({ ctx, body });
+      invokeLLMForMessage({ ctx, body }).catch(e=>{
+        return new HttpResponse({
+          code: ResponseCodes.SERVICE_UNAVAILABLE,
+          message: "Not able to invoke consecto",
+        });
+      })
     }
 
     return new HttpResponse({

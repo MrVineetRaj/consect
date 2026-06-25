@@ -11,7 +11,7 @@ const ConversationId = async ({
   params: Promise<{ conversation_id: string }>;
 }) => {
   const { conversation_id } = await params;
-  console.log(conversation_id);
+  
   const { getServerSession } = useAuthServer();
   const { listMessages } = useMessageClient();
   const session = await getServerSession();

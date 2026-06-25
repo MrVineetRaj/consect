@@ -13,16 +13,33 @@ export async function invokeLLMForMessage({
   ctx,
   body,
 }: CreateNewMessagePropType) {
+  // Fetching details about current conversation details
   const conversationDetails = await conversationRepository.getConversationById({
     id: ctx.conversationId,
   });
 
   let resourceForChannels: string[] = [];
 
+  // deciding which resource is to be shared for current conversation
   if (conversationDetails?.type == "channel") {
     resourceForChannels = [conversationDetails.id];
+  } else if (
+    conversationDetails?.type == "dm" ||
+    conversationDetails?.type == "group"
+  ) {
+    const temp =
+      await conversationRepository.getChannelsWhereMemberOfConversationIsParticipant(
+        {
+          conversationId: ctx.conversationId,
+          organizationId: ctx.organizationId,
+        },
+      );
+
+    resourceForChannels = temp;
   }
 
+
+  // fetching old messages for current conversation 
   const oldMessages = await messageRepository.getMessagesByConversationId({
     conversationId: ctx.conversationId,
     organizationId: ctx.organizationId,
@@ -30,6 +47,8 @@ export async function invokeLLMForMessage({
     offset: 1,
   });
 
+
+  // generating user query variants for properly reading resource and then giving user a valid answer
   const optimizedQueries = (await llmClient.getLLMResponse<
     z.infer<typeof LLMOptimizedQueriesSchema>
   >({
@@ -46,7 +65,9 @@ export async function invokeLLMForMessage({
   })) as z.infer<typeof LLMOptimizedQueriesSchema>;
   let context = "";
 
+
   if (optimizedQueries) {
+    // generating embeddings for query variant
     const searchEmbeddings = await Promise.all(
       optimizedQueries.queries.map((query) => {
         return llmClient.getEmbeddings({
@@ -55,6 +76,7 @@ export async function invokeLLMForMessage({
       }),
     );
 
+    // gathering various docs with help of the generated embeddings
     const searchResults = await Promise.all(
       searchEmbeddings.map((vector) => {
         return vectorDB.searchEmbedding({
@@ -72,9 +94,8 @@ export async function invokeLLMForMessage({
       }),
     );
 
+    // now applying rf ranking on docs to sort them out according to relevance
     const RRF_K = 60;
-    const normalize = (t: string) =>
-      t.replace(/\s+/g, " ").trim().toLowerCase();
 
     // fuse scores across the per-query searches
     const fused = new Map<string, { item: any; score: number }>();
@@ -95,14 +116,6 @@ export async function invokeLLMForMessage({
       });
     }
 
-    // {
-    // id: 0,
-    // version: 0,
-    // score: 0.60324264,
-    // payload: {
-    //   text: 'Vineet Raj\n'
-    //   secureURL,
-    //   type
     const results = [...fused.values()]
       .sort((a, b) => b.score - a.score)
       .map((entry) => {
@@ -114,6 +127,8 @@ export async function invokeLLMForMessage({
         };
       });
 
+
+    // generating a context used fused content
     context = results
       .map(
         (item) => `
@@ -124,9 +139,10 @@ export async function invokeLLMForMessage({
       `,
       )
       .join("\n\n");
-
-    console.log(context);
   }
+
+
+  // finally getting llm response for user query
   const llmResponse = await llmClient.getLLMResponse({
     userPrompt: body.content,
     systemPrompt:
@@ -141,11 +157,11 @@ export async function invokeLLMForMessage({
               )
               .join("\n\n")}
 
-
             ## Context
             ${context == "" ? "No context about it" : context}
             `,
   });
+
 
   await messageRepository.ensureBotUser();
   await messageRepository.createNewMessage({
@@ -157,6 +173,5 @@ export async function invokeLLMForMessage({
     mentions: [],
   });
 
-  console.log(llmResponse);
   // todo : send message to the room via socket
 }

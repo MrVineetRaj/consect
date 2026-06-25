@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, ne, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, ne, sql } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
 import { db } from "../connection.js";
 import { conversation, conversationMember, message, user } from "../schema.js";
@@ -176,6 +176,51 @@ class Repository {
       .returning();
 
     return updatedConversation;
+  }
+
+  async getChannelsWhereMemberOfConversationIsParticipant(args: {
+    conversationId: string;
+    organizationId: string;
+  }) {
+    // userIds of everyone in the source conversation
+    const memberIds = db
+      .select({ userId: conversationMember.userId })
+      .from(conversationMember)
+      .where(eq(conversationMember.conversationId, args.conversationId));
+
+    // total number of members in the source conversation
+    const [memberCountRow] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(conversationMember)
+      .where(eq(conversationMember.conversationId, args.conversationId));
+    const memberCount = memberCountRow?.count ?? 0;
+
+    // channels where EVERY source member is a participant:
+    // group by channel, keep those whose distinct member count == memberCount
+    const result = await db
+      .select({ conversation: conversation })
+      .from(conversation)
+      .innerJoin(
+        conversationMember,
+        eq(conversationMember.conversationId, conversation.id),
+      )
+      .where(
+        and(
+          inArray(conversationMember.userId, memberIds),
+          eq(conversation.type, "channel"),
+          eq(conversation.organizationId, args.organizationId),
+          ne(conversation.id, args.conversationId),
+        ),
+      )
+      .groupBy(conversation.id)
+      .having(
+        eq(
+          sql`count(distinct ${conversationMember.userId})`,
+          memberCount,
+        ),
+      );
+
+    return result.map((r) => r.conversation.id);
   }
 
   async deleteConversation(args: { id: string }) {
