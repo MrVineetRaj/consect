@@ -30,6 +30,7 @@ interface CreateEmbeddingArgs {
 interface GetEmbeddingArgs {
   collection: string;
   ids: Array<string | number>;
+  conversationIds: string[];
   withVector?: boolean;
   withPayload?: boolean;
 }
@@ -186,6 +187,8 @@ class VectorDB {
 
     return this.client.search(args.collection, request);
   }
+
+  async rankItems(args: { score: number[] }) {}
 
   // #endregion
 }

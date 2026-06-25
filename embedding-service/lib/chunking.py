@@ -1,3 +1,4 @@
+import uuid
 
 from clients.vector_da import vector_db
 from clients.llm import llm_client
@@ -19,6 +20,13 @@ async def get_embedding_for_chunks(chunks: list[str]) -> list[list[float]]:
 
 def insert_chunks_into_vector_db(chunks: list[str], embeddings: list[list[float]], collection_name: str, meta: dict = None):
     """Insert text chunks and their corresponding embeddings into the vector database."""
+    meta = meta or {}
+    public_id = meta.get("publicId", "")
     for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-        vector_db.insert_vector(collection_name=collection_name, point_id=i, vector=embedding, payload={"text": chunk, **meta})
+        # Deterministic, globally-unique id per (document, chunk). Using the
+        # chunk index alone made every document reuse ids 0,1,2,… so each new
+        # upload overwrote the previous document's points. uuid5 keeps it stable
+        # so re-embedding the same document overwrites only its own chunks.
+        point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"{public_id}:{i}"))
+        vector_db.insert_vector(collection_name=collection_name, point_id=point_id, vector=embedding, payload={"text": chunk, **meta})
     

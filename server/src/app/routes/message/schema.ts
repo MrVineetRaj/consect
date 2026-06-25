@@ -108,3 +108,7 @@ export const DeleteMessageHeadersSchema = z.object({
 export type DeleteMessagePropType = z.infer<typeof DeleteMessageInputSchema>;
 // ---
 
+// LLm response schema
+export const LLMOptimizedQueriesSchema = z.object({
+  queries: z.array(z.string()),
+});

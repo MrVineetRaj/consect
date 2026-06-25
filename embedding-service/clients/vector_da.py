@@ -15,7 +15,7 @@ class VectorDB:
             vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
         )
 
-    def insert_vector(self, collection_name: str, point_id: int, vector: list[float], payload: dict):
+    def insert_vector(self, collection_name: str, point_id: str | int, vector: list[float], payload: dict):
         """Insert a new vector into the specified collection."""
         is_collection_exist = self.client.collection_exists(collection_name)  # Ensure the collection exists before inserting
 
