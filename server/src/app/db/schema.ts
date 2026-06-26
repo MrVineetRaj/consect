@@ -173,6 +173,8 @@ export const userPreference = pgTable("user_preference", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   organizationId: text("organization_id"),
+  lastOpenedHomeConversation: text("last_opened_home_conversation"),
+  lastOpenedDMConversation: text("last_opened_dm_conversation"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .$onUpdate(() => /* @__PURE__ */ new Date())

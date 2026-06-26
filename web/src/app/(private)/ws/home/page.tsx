@@ -57,6 +57,12 @@ const HomePage = async () => {
   const { result: preference } = await getUserPreference(token);
   const organizationId = preference?.organizationId;
 
+  console.log(preference)
+
+  if (preference?.lastOpenedHomeConversation) {
+    redirect(`/ws/home/${preference.lastOpenedHomeConversation}`);
+  }
+
   const { listRecentConversations } = useConversationClient();
   const conversations = organizationId
     ? (await listRecentConversations({ token, organizationId })).result
@@ -79,7 +85,8 @@ const HomePage = async () => {
               Welcome back, {firstName}
             </h1>
             <p className="max-w-xl text-base text-muted-foreground">
-              Jump back into a conversation, or pick up where your team left off.
+              Jump back into a conversation, or pick up where your team left
+              off.
             </p>
           </div>
           <Badge

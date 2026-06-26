@@ -32,6 +32,8 @@ export type GetUserPreferencePropType = z.infer<
 export const UpdateUserPreferenceInputSchema = z.object({
   body: z.object({
     organizationId: z.string().nonempty().nullish(),
+    lastOpenedHomeConversation: z.string().nonempty().nullish(),
+    lastOpenedDMConversation: z.string().nonempty().nullish(),
   }),
   ctx: z.object({
     userId: z.string(),

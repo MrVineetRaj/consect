@@ -5,7 +5,7 @@ import { useOrganizationStore } from "@/store/organization-store";
 import { HashIcon, PlusIcon, SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 type Channel = { id: string; name: string | null };
@@ -90,7 +90,7 @@ export const ConversationSidebar = ({
       "text-muted-foreground hover:bg-background hover:text-foreground",
       isActive && "bg-primary/10 font-medium text-primary hover:bg-primary/10",
     );
-
+    
   return (
     <aside className="flex w-72 flex-col border-r border-border/60 bg-muted/40">
       <div className="flex flex-col gap-3 px-4 py-3.5">

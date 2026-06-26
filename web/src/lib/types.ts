@@ -14,6 +14,8 @@ interface IUserPreference {
   createdAt: Date;
   updatedAt: Date;
   organizationId: string | null;
+  lastOpenedHomeConversation: string | null;
+  lastOpenedDMConversation: string | null;
 }
 
 type OrganizationRole = "owner" | "admin" | "member";

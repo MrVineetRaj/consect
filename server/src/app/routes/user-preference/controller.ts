@@ -33,9 +33,20 @@ class Controller {
   }
 
   async updateUserPreference({ ctx, body }: UpdateUserPreferencePropType) {
-    const newContent: { organizationId?: string | null } = {};
+    const newContent: {
+      organizationId?: string | null;
+      lastOpenedHomeConversation?: string | null;
+      lastOpenedDMConversation?: string | null;
+    } = {};
     if (body.organizationId !== undefined) {
       newContent.organizationId = body.organizationId;
+    }
+
+    if (body.lastOpenedDMConversation !== undefined) {
+      newContent.lastOpenedDMConversation = body.lastOpenedDMConversation;
+    }
+    if (body.lastOpenedHomeConversation !== undefined) {
+      newContent.lastOpenedHomeConversation = body.lastOpenedHomeConversation;
     }
 
     const preference = await userPreferenceRepository.updateUserPreference({

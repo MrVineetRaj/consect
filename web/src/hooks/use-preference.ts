@@ -41,7 +41,11 @@ export function usePreferenceClient() {
 
   async function updateUserPreference(
     token: string,
-    body: { organizationId?: string | null },
+    body: {
+      organizationId?: string | null;
+      lastOpenedHomeConversation?: string | null;
+      lastOpenedDMConversation?: string | null;
+    },
   ) {
     try {
       const res = await axiosClient.patch("/user-preference", body, {

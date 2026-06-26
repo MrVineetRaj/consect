@@ -1,8 +1,26 @@
 import { OrganizationModel } from "@/components/ws/organizations-model";
+import { usePreferenceClient } from "@/hooks/use-preference";
+import { useAuthServer } from "@/lib/auth-server";
 import { MessagesSquareIcon } from "lucide-react";
+import { redirect } from "next/navigation";
 import React from "react";
 
-const DirectMessagePage = () => {
+const DirectMessagePage = async () => {
+  const { getServerSession } = useAuthServer();
+  const session = await getServerSession();
+  const token = session?.session.token;
+
+  if (!token) {
+    redirect("/auth");
+  }
+
+  const { getUserPreference } = usePreferenceClient();
+  const { result: preference } = await getUserPreference(token);
+
+  if (preference?.lastOpenedDMConversation) {
+    redirect(`/ws/dm/${preference.lastOpenedDMConversation}`);
+  }
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
       <div className="grid size-16 place-items-center rounded-2xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">

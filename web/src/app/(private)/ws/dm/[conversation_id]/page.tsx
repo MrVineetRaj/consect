@@ -19,8 +19,12 @@ const DmConversationPage = async ({
   if (!token) {
     redirect("/auth");
   }
-  const { getUserPreference } = usePreferenceClient();
+  const { getUserPreference, updateUserPreference } = usePreferenceClient();
   const { result: preference } = await getUserPreference(token);
+
+  await updateUserPreference(token, {
+    lastOpenedDMConversation: conversation_id,
+  });
 
   const organizationId = preference?.organizationId;
   const messages = organizationId

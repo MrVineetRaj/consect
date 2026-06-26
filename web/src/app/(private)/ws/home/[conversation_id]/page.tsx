@@ -11,7 +11,7 @@ const ConversationId = async ({
   params: Promise<{ conversation_id: string }>;
 }) => {
   const { conversation_id } = await params;
-  
+
   const { getServerSession } = useAuthServer();
   const { listMessages } = useMessageClient();
   const session = await getServerSession();
@@ -19,8 +19,12 @@ const ConversationId = async ({
   if (!token) {
     redirect("/auth");
   }
-  const { getUserPreference } = usePreferenceClient();
+  const { getUserPreference,updateUserPreference } = usePreferenceClient();
   const { result: preference } = await getUserPreference(token);
+
+  await updateUserPreference(token, {
+    lastOpenedHomeConversation: conversation_id,
+  });
 
   const organizationId = preference?.organizationId;
   const messages = organizationId

@@ -17,18 +17,15 @@ const HomeLayout = async ({
     redirect("/auth");
   }
 
-  const { getUserPreference } = usePreferenceClient();
+  const { getUserPreference, updateUserPreference } = usePreferenceClient();
   const { result: preference } = await getUserPreference(token);
 
   const { listRecentConversations } = useConversationClient();
-  // const {} = useW
 
   const organizationId = preference?.organizationId;
   const conversations = organizationId
     ? (await listRecentConversations({ token, organizationId })).result
     : { channels: [], dmAndGroups: [] };
-
-  console.log(conversations.dmAndGroups);
 
   return (
     <div className="flex-1 min-h-0 flex">
