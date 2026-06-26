@@ -6,6 +6,8 @@ export const ResourceTypeSchema = z.enum(["doc", "pdf", "url", "text", "md"]);
 export const CreateResourceInputSchema = z.object({
   body: z.object({
     type: ResourceTypeSchema,
+    name: z.string().optional(),
+    description: z.string().optional(),
     // The raw resource (a URL, pasted text/markdown, or extracted file text).
     // It is fed to the embedding pipeline; only the resulting embeddingId is
     // persisted on the resource row.
@@ -52,6 +54,29 @@ export const DeleteResourceInputSchema = z.object({
 export type DeleteResourcePropType = z.infer<typeof DeleteResourceInputSchema>;
 
 export const DeleteResourceHeadersSchema = z.object({
+  [HeaderKeys.organizationId]: z.string().meta({
+    description: "Organization the resource belongs to.",
+  }),
+});
+
+export const UpdateResourceMetaInputSchema = z.object({
+  body: z.object({
+    id: z.string().nonempty(),
+    name: z.string().optional(),
+    description: z.string().optional(),
+    allowedChannelIds: z.array(z.string()).optional(),
+    tags: z.array(z.string()).optional(),
+  }),
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string(),
+  }),
+});
+export type UpdateResourceMetaPropType = z.infer<
+  typeof UpdateResourceMetaInputSchema
+>;
+
+export const UpdateResourceMetaHeadersSchema = z.object({
   [HeaderKeys.organizationId]: z.string().meta({
     description: "Organization the resource belongs to.",
   }),

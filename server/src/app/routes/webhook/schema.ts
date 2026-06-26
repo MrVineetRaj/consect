@@ -24,8 +24,9 @@ export const CreateResourceHeadersSchema = z.object();
 
 export const EmbeddingStatusUpdateInputSchema = z.object({
   body: z.object({
-    organizationId: z.string().nonempty(),
+    resourceId: z.string().nonempty(),
     pointIds: z.array(z.string()),
+    status: z.enum(["failed", "success"]).default("failed"),
   }),
 });
 
@@ -33,11 +34,7 @@ export type EmbeddingStatusUpdatePropType = z.infer<
   typeof EmbeddingStatusUpdateInputSchema
 >;
 
-export const EmbeddingStatusUpdateHeadersSchema = z.object({
-  [HeaderKeys.organizationId]: z.string().meta({
-    description: "Organization the resources belong to.",
-  }),
-});
+export const EmbeddingStatusUpdateHeadersSchema = z.object({});
 
 export const DeleteResourceInputSchema = z.object({
   body: z.object({

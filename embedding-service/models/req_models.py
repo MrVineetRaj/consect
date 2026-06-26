@@ -12,6 +12,8 @@ class EmbedDocumentRequest(BaseModel):
     id: str
     organizationId: str | None
     publicId: str
+    name:str
+    description: str | None = None
     allowedChannelIds: list[str]
     tags: list[str]
     type: DocumentType

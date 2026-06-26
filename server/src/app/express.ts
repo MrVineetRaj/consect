@@ -30,13 +30,14 @@ import {
 import { buildOpenApiDocument } from "./adapter/openapi.js";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
-import { HttpResponse } from "./adapter/http.js";
+import { HttpRequest, HttpResponse } from "./adapter/http.js";
 import { ResponseCodes } from "./types/codes.js";
 import { env } from "../env.js";
 import {
   router as webhookRoutes,
   WEBHOOK_BASE_PATH,
 } from "./routes/webhook/routes.js";
+import { logger } from "better-auth";
 
 export function createExpressApp(): Application {
   const app: Application = express();
@@ -71,7 +72,9 @@ export function createExpressApp(): Application {
   app.use("/docs", apiReference({ content: openApiDoc }));
 
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    console.log(err);
+    logger.error(err?.message ?? "Something went wrong", {
+      ...new HttpRequest(req, res),
+    });
     res.status(500).json({
       ...new HttpResponse({
         code: ResponseCodes.INTERNAL_SERVER_ERROR,

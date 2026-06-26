@@ -2,10 +2,12 @@ import { HttpResponse } from "../../adapter/http.js";
 import { cloudinaryClient } from "../../clients/cloudinary.js";
 import { aiHubResourceRepository } from "../../db/repository/ai-hub-resource.js";
 import { ResponseCodes } from "../../types/codes.js";
+import { vectorDB } from "../../vector_db/client.js";
 import type {
   CreateResourcePropType,
   DeleteResourcePropType,
   ListResourcesPropType,
+  UpdateResourceMetaPropType,
 } from "./schema.js";
 
 class Controller {
@@ -20,34 +22,84 @@ class Controller {
     // TODO: run `body.content` through the embedding pipeline (vector_db) and
     // store the returned vector id. Until that exists we persist the resource
     // metadata with a null embeddingId.
-    const embeddingId: string | null = null;
 
     const result = await aiHubResourceRepository.createResource({
       organizationId: ctx.organizationId,
       type: body.type,
+      name: body.name ?? null,
+      description: body.description ?? null,
       tags: body.tags,
       allowedChannelIds: body.allowedChannelIds,
       publicId,
       secureURL,
-      embeddingId,
+      status: "processing",
+      embeddingIds: [],
     });
 
-    fetch("http://localhost:8000/embed_document", {
+    // Kick off embedding without blocking the response. The embedding service
+    // flips the row to "success" once it finishes; if we can't even reach it,
+    // mark the resource "failed" so the client can surface the error.
+    void fetch("http://localhost:8000/embed_document", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(result),
-    }).catch((e) => {
-      return new HttpResponse({
-        code: ResponseCodes.SERVICE_UNAVAILABLE,
-        message: "Failed to embed document",
+    }).catch(async () => {
+      await aiHubResourceRepository.updateResourceDetails({
+        resourceId: result!.id,
+        pointIds: [],
+        status: "failed",
       });
     });
 
     return new HttpResponse({
       code: ResponseCodes.CREATED,
       message: "Resource added to AI Hub",
+      result,
+    });
+  }
+
+  async updateResourceMeta({ ctx, body }: UpdateResourceMetaPropType) {
+    const resource = await aiHubResourceRepository.getResourceById({
+      id: body.id,
+    });
+    if (!resource || resource.organizationId !== ctx.organizationId) {
+      return new HttpResponse({
+        code: ResponseCodes.NOT_FOUND,
+        message: "Resource not found",
+      });
+    }
+
+    const result = await aiHubResourceRepository.updateResourceMeta({
+      resourceId: body.id,
+      name: body.name,
+      description: body.description,
+      allowedChannelIds: body.allowedChannelIds,
+      tags: body.tags,
+    });
+
+    // Mirror the editable metadata onto every embedding point so access scoping
+    // (allowedChannelIds) and search context (name/description/tags) stay in
+    // sync with the row. Only the provided keys are merged into each payload.
+    const payload: Record<string, unknown> = {};
+    if (body.name !== undefined) payload.name = body.name;
+    if (body.description !== undefined) payload.description = body.description;
+    if (body.allowedChannelIds !== undefined)
+      payload.allowedChannelIds = body.allowedChannelIds;
+    if (body.tags !== undefined) payload.tags = body.tags;
+
+    if (Object.keys(payload).length > 0 && resource.embeddingIds?.length) {
+      await vectorDB.setEmbeddingsPayload({
+        collection: resource.organizationId!,
+        ids: resource.embeddingIds,
+        payload,
+      });
+    }
+
+    return new HttpResponse({
+      code: ResponseCodes.SUCCESS,
+      message: "Resource updated",
       result,
     });
   }
@@ -72,6 +124,13 @@ class Controller {
     });
     if (resource?.publicId) {
       await cloudinaryClient.deleteResource({ publicId: resource.publicId });
+    }
+
+    if (resource?.embeddingIds) {
+      await vectorDB.deleteEmbedding({
+        collection: resource.organizationId!,
+        ids: resource.embeddingIds,
+      });
     }
 
     await aiHubResourceRepository.deleteResource({ id: body.id });

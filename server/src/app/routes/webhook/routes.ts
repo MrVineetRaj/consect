@@ -11,11 +11,11 @@ export const WEBHOOK_BASE_PATH = "/api/webhook";
 
 const api = createApiRouter(WEBHOOK_BASE_PATH);
 
-api.post("/embedding/status-update", authMiddleware, {
+api.post("/embedding/status-update", {
   schema: EmbeddingStatusUpdateInputSchema,
   response: AiHubResponseSchema,
   headers: EmbeddingStatusUpdateHeadersSchema,
-  auth: true,
+  auth: false,
   handler: controller.embeddingStatusUpdate.bind(controller),
   summary: "Callback url for Embedding service",
   tags: ["Webhooks"],

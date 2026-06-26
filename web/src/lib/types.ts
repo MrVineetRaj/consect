@@ -41,14 +41,19 @@ interface IConversation {
 
 type AiHubResourceType = "doc" | "pdf" | "url" | "text" | "md";
 
+type AiHubResourceStatus = "pending" | "processing" | "failed" | "success";
+
 interface IAiHubResource {
   id: string;
   organizationId: string | null;
   type: AiHubResourceType | null;
+  name: string | null;
+  description: string | null;
   allowedChannelIds: string[] | null;
   tags: string[] | null;
   publicId: string;
   secureURL: string;
+  status: AiHubResourceStatus | null;
   embeddingId: string | null;
   createdAt: Date;
   updatedAt: Date;

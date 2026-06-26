@@ -5,8 +5,9 @@ import type {
   ChannelAccessConfig,
   OrganizationAccessConfig,
 } from "../types/access-config.js";
+import logger from "../lib/logger.js";
 
-class HttpRequest {
+export class HttpRequest {
   body: Request["body"];
   query: Request["query"];
   params: Request["params"];
@@ -69,11 +70,22 @@ export function AsyncHttpHandler(
           });
           return;
         }
-        
         result = await fn(validHttpReq.data);
+        if (result.code >= 400) {
+          logger.error(result.message, {
+            httpRequest,
+            payload: validHttpReq.data,
+          });
+        }
       } else {
         result = await fn();
+        if (result.code >= 400) {
+          logger.error(result.message, {
+            ...httpRequest,
+          });
+        }
       }
+
       res.status(result.code).json(result);
     } catch (error: any) {
       throw error;

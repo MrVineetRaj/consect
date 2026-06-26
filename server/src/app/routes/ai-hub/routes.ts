@@ -9,6 +9,8 @@ import {
   DeleteResourceInputSchema,
   ListResourcesHeadersSchema,
   ListResourcesInputSchema,
+  UpdateResourceMetaHeadersSchema,
+  UpdateResourceMetaInputSchema,
 } from "./schema.js";
 
 export const AI_HUB_BASE_PATH = "/api/v1/ai-hub";
@@ -32,6 +34,16 @@ api.get("/", authMiddleware, {
   auth: true,
   handler: controller.listResources.bind(controller),
   summary: "List AI Hub resources",
+  tags: ["AI Hub"],
+});
+
+api.patch("/", authMiddleware, {
+  schema: UpdateResourceMetaInputSchema,
+  response: AiHubResponseSchema,
+  headers: UpdateResourceMetaHeadersSchema,
+  auth: true,
+  handler: controller.updateResourceMeta.bind(controller),
+  summary: "Update an AI Hub resource's name, description, or channels",
   tags: ["AI Hub"],
 });
 

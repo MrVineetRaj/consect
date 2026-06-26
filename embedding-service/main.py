@@ -40,10 +40,11 @@ async def embed_document(data: EmbedDocumentRequest):
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(
-                "http://localhost:8000/api/webhook/embedding/status-update",
+                "http://localhost:8080/api/webhook/embedding/status-update",
                 json={
                     "pointIds": point_ids,
-                    "organizationId": data.organizationId,
+                    "resourceId": data.id,
+                    "status": "success",
                 },
             )
             resp.raise_for_status()

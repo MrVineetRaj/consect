@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, lte, or } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
 import { db } from "../connection.js";
 import { aiHubResource } from "../schema.js";
@@ -40,6 +40,75 @@ class Repository {
   async deleteResource(args: { id: string }) {
     await db.delete(aiHubResource).where(eq(aiHubResource.id, args.id));
     return true;
+  }
+
+  async updateResourceMeta(args: {
+    resourceId: string;
+    allowedChannelIds?: string[] | undefined;
+    name?: string | undefined;
+    description?: string | undefined;
+    tags?: string[] | undefined;
+  }) {
+    const [updatedAIHubResource] = await db
+      .update(aiHubResource)
+      .set({
+        ...(args.allowedChannelIds !== undefined && {
+          allowedChannelIds: args.allowedChannelIds,
+        }),
+        ...(args.name !== undefined && { name: args.name }),
+        ...(args.description !== undefined && {
+          description: args.description,
+        }),
+        ...(args.tags !== undefined && { tags: args.tags }),
+      })
+      .where(eq(aiHubResource.id, args.resourceId))
+      .returning();
+
+    return updatedAIHubResource;
+  }
+
+  async updateResourceDetails(args: {
+    pointIds: string[];
+    resourceId: string;
+    status: "pending" | "failed" | "processing" | "success";
+  }) {
+    const [updatedAIHubResource] = await db
+      .update(aiHubResource)
+      .set({
+        status: args.status,
+        embeddingIds: args.pointIds,
+      })
+      .where(eq(aiHubResource.id, args.resourceId))
+      .returning();
+
+    return updatedAIHubResource;
+  }
+
+  async getUnEmbeddedResourcesByStatus() {
+    const failedResources = await db
+      .select()
+      .from(aiHubResource)
+      .where(eq(aiHubResource.status, "failed"));
+
+    const last2Hr = new Date(new Date().getTime() - 2 * 60 * 60 * 1000);
+
+    const processingOrPendingResourcesSinceOneHrs = await db
+      .select()
+      .from(aiHubResource)
+      .where(
+        and(
+          or(
+            eq(aiHubResource.status, "pending"),
+            eq(aiHubResource.status, "processing"),
+          ),
+          lte(aiHubResource.createdAt, last2Hr),
+        ),
+      );
+
+    return {
+      failed: failedResources,
+      pending: processingOrPendingResourcesSinceOneHrs,
+    };
   }
 }
 

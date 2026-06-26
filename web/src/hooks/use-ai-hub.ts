@@ -31,12 +31,43 @@ export function useAiHubClient() {
     organizationId: string;
     body: {
       type: AiHubResourceType;
+      name?: string;
+      description?: string;
       content: string;
       tags: string[];
       allowedChannelIds: string[];
     };
   }) {
     const res = await axiosClient.post("/ai-hub", body, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-organization-id": organizationId,
+      },
+    });
+
+    return res.data as {
+      message: string;
+      code: number;
+      result: IAiHubResource;
+    };
+  }
+
+  async function updateResource({
+    token,
+    organizationId,
+    body,
+  }: {
+    token: string;
+    organizationId: string;
+    body: {
+      id: string;
+      name?: string;
+      description?: string;
+      allowedChannelIds?: string[];
+      tags?: string[];
+    };
+  }) {
+    const res = await axiosClient.patch("/ai-hub", body, {
       headers: {
         Authorization: `Bearer ${token}`,
         "X-organization-id": organizationId,
@@ -70,5 +101,5 @@ export function useAiHubClient() {
     return res.data as { message: string; code: number };
   }
 
-  return { listResources, createResource, deleteResource };
+  return { listResources, createResource, updateResource, deleteResource };
 }
