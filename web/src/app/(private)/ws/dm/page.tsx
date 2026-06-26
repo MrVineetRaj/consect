@@ -17,7 +17,7 @@ const DirectMessagePage = async () => {
   const { getUserPreference } = usePreferenceClient();
   const { result: preference } = await getUserPreference(token);
 
-  if (preference?.lastOpenedDMConversation) {
+  if (!!preference?.lastOpenedDMConversation) {
     redirect(`/ws/dm/${preference.lastOpenedDMConversation}`);
   }
 

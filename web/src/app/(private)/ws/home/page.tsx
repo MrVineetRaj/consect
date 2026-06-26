@@ -57,9 +57,7 @@ const HomePage = async () => {
   const { result: preference } = await getUserPreference(token);
   const organizationId = preference?.organizationId;
 
-  console.log(preference)
-
-  if (preference?.lastOpenedHomeConversation) {
+  if (!!preference?.lastOpenedHomeConversation) {
     redirect(`/ws/home/${preference.lastOpenedHomeConversation}`);
   }
 

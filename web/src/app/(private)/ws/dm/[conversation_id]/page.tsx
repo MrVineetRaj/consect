@@ -22,9 +22,11 @@ const DmConversationPage = async ({
   const { getUserPreference, updateUserPreference } = usePreferenceClient();
   const { result: preference } = await getUserPreference(token);
 
-  await updateUserPreference(token, {
-    lastOpenedDMConversation: conversation_id,
-  });
+  if (preference?.lastOpenedDMConversation != conversation_id) {
+    await updateUserPreference(token, {
+      lastOpenedDMConversation: conversation_id,
+    });
+  }
 
   const organizationId = preference?.organizationId;
   const messages = organizationId

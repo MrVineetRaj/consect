@@ -19,12 +19,14 @@ const ConversationId = async ({
   if (!token) {
     redirect("/auth");
   }
-  const { getUserPreference,updateUserPreference } = usePreferenceClient();
+  const { getUserPreference, updateUserPreference } = usePreferenceClient();
   const { result: preference } = await getUserPreference(token);
 
-  await updateUserPreference(token, {
-    lastOpenedHomeConversation: conversation_id,
-  });
+  if (preference?.lastOpenedHomeConversation != conversation_id) {
+    await updateUserPreference(token, {
+      lastOpenedHomeConversation: conversation_id,
+    });
+  }
 
   const organizationId = preference?.organizationId;
   const messages = organizationId
@@ -37,6 +39,7 @@ const ConversationId = async ({
       ).result
     : [];
 
+  
   return (
     <main className="flex h-full w-full">
       <div className="flex-5 min-h-0 h-full">
