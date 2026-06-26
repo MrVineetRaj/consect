@@ -50,15 +50,17 @@ const dmLabel = (c: DmConversation) =>
 export const ConversationSidebar = ({
   channels,
   dmAndGroups,
+  isDMPage = false,
 }: {
   channels: Channel[];
   dmAndGroups: DmConversation[];
+  isDMPage?: boolean;
 }) => {
   const { orgPresence } = useOrganizationStore();
   const pathname = usePathname();
 
   useEffect(() => {
-    console.log("orgPresence",{orgPresence});
+    console.log("orgPresence", { orgPresence });
   }, [orgPresence]);
 
   const itemClass = (isActive: boolean) =>
@@ -76,28 +78,31 @@ export const ConversationSidebar = ({
       </div>
 
       <nav className="flex-1 min-h-0 space-y-5 overflow-y-auto px-2 pb-4">
-        <div>
-          <SectionHeader title="Channels" count={channels.length} />
-          {channels.length === 0 ? (
-            <EmptyHint>No channels yet</EmptyHint>
-          ) : (
-            channels.map((channel) => {
-              const isActive = pathname.includes(channel.id);
-              return (
-                <Link
-                  key={channel.id}
-                  href={`/ws/home/${channel.id}`}
-                  aria-current={isActive ? "page" : undefined}
-                  className={itemClass(isActive)}
-                >
-                  <HashIcon className="size-4 shrink-0 opacity-70" />
-                  <span className="truncate">{channel.name ?? "Untitled"}</span>
-                </Link>
-              );
-            })
-          )}
-        </div>
-
+        {!isDMPage && (
+          <div>
+            <SectionHeader title="Channels" count={channels.length} />
+            {channels.length === 0 ? (
+              <EmptyHint>No channels yet</EmptyHint>
+            ) : (
+              channels.map((channel) => {
+                const isActive = pathname.includes(channel.id);
+                return (
+                  <Link
+                    key={channel.id}
+                    href={`/ws/home/${channel.id}`}
+                    aria-current={isActive ? "page" : undefined}
+                    className={itemClass(isActive)}
+                  >
+                    <HashIcon className="size-4 shrink-0 opacity-70" />
+                    <span className="truncate">
+                      {channel.name ?? "Untitled"}
+                    </span>
+                  </Link>
+                );
+              })
+            )}
+          </div>
+        )}
         <div>
           <SectionHeader title="Direct Messages" count={dmAndGroups.length} />
           {dmAndGroups.length === 0 ? (
@@ -113,7 +118,7 @@ export const ConversationSidebar = ({
               return (
                 <Link
                   key={conversation.id}
-                  href={`/ws/home/${conversation.id}`}
+                  href={`/ws/${isDMPage ? "dm" : "home"}/${conversation.id}`}
                   aria-current={isActive ? "page" : undefined}
                   className={itemClass(isActive)}
                 >
