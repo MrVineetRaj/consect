@@ -28,6 +28,8 @@ const HomeLayout = async ({
     ? (await listRecentConversations({ token, organizationId })).result
     : { channels: [], dmAndGroups: [] };
 
+  console.log(conversations.dmAndGroups);
+
   return (
     <div className="flex-1 min-h-0 flex">
       <ConversationSidebar

@@ -25,7 +25,17 @@ class Repository {
       })
       .returning();
 
-    return newMessage;
+    if (!newMessage?.id) return undefined;
+    
+    const result = await db.query.message.findFirst({
+      where: (fields, { eq }) => eq(fields.id, newMessage.id),
+      with: {
+        sender: true,
+        files: true,
+      },
+    });
+
+    return result;
   }
 
   async getMessageById(args: {

@@ -1,10 +1,11 @@
 "use client";
 import { ConversationAvatar } from "@/components/shared/conversation-avatar";
 import { cn } from "@/lib/utils";
+import { useOrganizationStore } from "@/store/organization-store";
 import { HashIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
 
 type Channel = { id: string; name: string | null };
 
@@ -13,15 +14,10 @@ type DmConversation = {
   name?: string | null;
   image?: string | null;
   members: ConversationMember[];
+  type: "group" | "dm" | "channel" | null;
 };
 
-const SectionHeader = ({
-  title,
-  count,
-}: {
-  title: string;
-  count: number;
-}) => (
+const SectionHeader = ({ title, count }: { title: string; count: number }) => (
   <div className="flex items-center justify-between px-2 pb-1">
     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
       {title}
@@ -49,8 +45,7 @@ const EmptyHint = ({ children }: { children: React.ReactNode }) => (
 
 const dmLabel = (c: DmConversation) =>
   c.name ??
-  c.members.map((m) => m.name).join(", ") +
-    (c.members.length > 4 ? "…" : "");
+  c.members.map((m) => m.name).join(", ") + (c.members.length > 4 ? "…" : "");
 
 export const ConversationSidebar = ({
   channels,
@@ -59,15 +54,19 @@ export const ConversationSidebar = ({
   channels: Channel[];
   dmAndGroups: DmConversation[];
 }) => {
+  const { orgPresence } = useOrganizationStore();
   const pathname = usePathname();
+
+  useEffect(() => {
+    console.log("orgPresence",{orgPresence});
+  }, [orgPresence]);
 
   const itemClass = (isActive: boolean) =>
     cn(
       "group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm",
       "transition-colors duration-150",
       "text-muted-foreground hover:bg-background hover:text-foreground",
-      isActive &&
-        "bg-primary/10 font-medium text-primary hover:bg-primary/10",
+      isActive && "bg-primary/10 font-medium text-primary hover:bg-primary/10",
     );
 
   return (
@@ -100,15 +99,17 @@ export const ConversationSidebar = ({
         </div>
 
         <div>
-          <SectionHeader
-            title="Direct Messages"
-            count={dmAndGroups.length}
-          />
+          <SectionHeader title="Direct Messages" count={dmAndGroups.length} />
           {dmAndGroups.length === 0 ? (
             <EmptyHint>No direct messages yet</EmptyHint>
           ) : (
             dmAndGroups.map((conversation) => {
               const isActive = pathname.includes(conversation.id);
+              const isOnline =
+                conversation.type == "group"
+                  ? false
+                  : (orgPresence[conversation.members[0].userId] ?? false);
+
               return (
                 <Link
                   key={conversation.id}
@@ -119,6 +120,7 @@ export const ConversationSidebar = ({
                   <ConversationAvatar
                     image={conversation.image}
                     members={conversation.members}
+                    isOnline={isOnline}
                   />
                   <span className="truncate">{dmLabel(conversation)}</span>
                 </Link>
