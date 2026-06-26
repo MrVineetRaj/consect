@@ -23,7 +23,7 @@ class CronHandlers {
         return aiHubResourceRepository.updateResourceDetails({
           resourceId: item!.id,
           pointIds: [],
-          status: "failed",
+          status: "processing",
         });
       }),
     );
