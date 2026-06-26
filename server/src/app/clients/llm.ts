@@ -5,29 +5,30 @@ import type z from "zod";
 
 class LLMClient {
   private client;
-  private agent;
+  // private agent;
   constructor() {
     this.client = new OpenAI();
-    this.agent = new Agent({
-      name: "consecto",
-      model: "gpt-5.4-min",
-    });
+    // this.agent = new Agent({
+    //   name: "consecto",
+    //   model: "gpt-5.4-mini",
+    // });
   }
 
   async getEmbeddings(args: { text: string }) {
-    const result = this.client.embeddings.create({
+    const result = await this.client.embeddings.create({
       input: args.text,
       model: "text-embedding-3-small",
+      encoding_format: "float",
     });
 
-    return result;
+    return result.data;
   }
 
   async getLLMResponse<T>(args: {
     userPrompt: string;
     systemPrompt: string;
     developerPrompt: string;
-    schema?: { label: string; structure: z.ZodObject };
+    schema?: { structure: z.ZodObject };
   }) {
     const messages: {
       role: "system" | "developer" | "user" | "assistant";
@@ -59,11 +60,13 @@ class LLMClient {
         messages: messages,
         response_format: zodResponseFormat(
           args.schema.structure,
-          args.schema.label,
+          "result",
         ),
       });
 
-      return result.choices[0]?.message.parsed as { [key: string]: T };
+      const temp =  result.choices[0]?.message.parsed;
+
+      return temp as T;
     }
 
     const result = await this.client.chat.completions.parse({

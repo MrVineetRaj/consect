@@ -30,6 +30,7 @@ interface CreateEmbeddingArgs {
 interface GetEmbeddingArgs {
   collection: string;
   ids: Array<string | number>;
+  conversationIds: string[];
   withVector?: boolean;
   withPayload?: boolean;
 }
@@ -159,11 +160,33 @@ class VectorDB {
     });
   }
 
-  async deleteEmbedding(args: DeleteEmbeddingArgs) {
-    return this.client.delete(args.collection, {
+  /**
+   * Merge a payload into many existing points at once. Only the provided keys
+   * are overwritten; the rest of each point's payload is left intact.
+   */
+  async setEmbeddingsPayload(args: {
+    collection: string;
+    ids: Array<string | number>;
+    payload: Payload;
+  }) {
+    if (args.ids.length === 0) return;
+    return this.client.setPayload(args.collection, {
       wait: true,
+      payload: args.payload,
       points: args.ids,
     });
+  }
+
+  async deleteEmbedding(args: DeleteEmbeddingArgs) {
+    if (args.ids.length == 0) return;
+    try {
+      return this.client.delete(args.collection, {
+        wait: true,
+        points: args.ids,
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   /** Find the nearest stored embeddings to a query vector, ordered by score. */
@@ -186,6 +209,8 @@ class VectorDB {
 
     return this.client.search(args.collection, request);
   }
+
+  async rankItems(args: { score: number[] }) {}
 
   // #endregion
 }

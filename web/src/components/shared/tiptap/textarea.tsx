@@ -17,6 +17,7 @@ import { makeMentionSuggestion } from "./mention-suggestion";
 
 import { cn } from "@/lib/utils";
 import { useOrganizationStore } from "@/store/organization-store";
+import { icons } from "@/lib/assets";
 
 type ToolbarButton = {
   icon: React.ComponentType<{ className?: string }>;
@@ -129,7 +130,14 @@ export const TiptapTextArea = forwardRef<TiptapHandle, TiptapTextAreaProps>(
           StarterKit,
           Mention.configure({
             HTMLAttributes: { class: "mention" },
-            suggestion: makeMentionSuggestion(orgMembers.map((mem) => mem.user)),
+            suggestion: makeMentionSuggestion([
+              {
+                id: "consecto",
+                name: "consecto",
+                image: icons.robot,
+              },
+              ...orgMembers.map((mem) => mem.user),
+            ]),
           }),
         ],
         content: "",
@@ -159,13 +167,13 @@ export const TiptapTextArea = forwardRef<TiptapHandle, TiptapTextAreaProps>(
         getText: () => editor?.getText().trim() ?? "",
         getHTML: () => editor?.getHTML() ?? "",
         getMentions: () => {
-          const ids: string[] = [];
+          const ids: Set<string> = new Set();
           editor?.state.doc.descendants((node) => {
             if (node.type.name === "mention" && node.attrs.id) {
-              ids.push(node.attrs.id as string);
+              ids.add(node.attrs.id as string);
             }
           });
-          return ids;
+          return Array.from(ids);
         },
         clear: () => editor?.commands.clearContent(true),
       }),

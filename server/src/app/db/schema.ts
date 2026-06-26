@@ -29,6 +29,13 @@ export const resourceTypeEnum = pgEnum("resource_type_enum", [
   "md",
 ]);
 
+export const statusEnum = pgEnum("status_enum", [
+  "pending",
+  "processing",
+  "failed",
+  "success",
+]);
+
 export const roleEnum = pgEnum("role_enum", ["owner", "admin", "member"]);
 // #region --- Better Auth Schema ---
 
@@ -277,9 +284,14 @@ export const aiHubResource = pgTable("ai_hub_resource", {
     onDelete: "cascade",
   }),
   type: resourceTypeEnum("type"),
+  name: text("name"),
+  description: text("description"),
   allowedChannelIds: jsonb("allowed_channel_id"),
   tags: jsonb("tags"),
-  embeddingId: text("embedding_id"),
+  publicId: text("public_id").notNull(),
+  secureURL: text("secure_url").notNull(),
+  status: statusEnum("status").default("pending"),
+  embeddingIds: text("embedding_ids").array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .$onUpdate(() => /* @__PURE__ */ new Date())

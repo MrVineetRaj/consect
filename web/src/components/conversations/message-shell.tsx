@@ -59,7 +59,11 @@ const MessageBox = ({ msg, isOwn }: { msg: IMessage; isOwn: boolean }) => {
     >
       <Avatar className="size-8 shrink-0">
         <Image
-          src={msg.sender.image ?? icons.avatar}
+          src={
+            (msg.sender.image ?? msg.senderId == "consecto")
+              ? icons.robot
+              : icons.avatar
+          }
           height={60}
           width={60}
           alt={msg.sender.name}

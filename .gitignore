@@ -4,3 +4,7 @@ node_modules
 dist
 dev
 .vscode
+.venv
+__pycache__
+*.log
+logs/

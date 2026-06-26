@@ -1,4 +1,5 @@
 import { HttpResponse } from "../../adapter/http.js";
+import { llmClient } from "../../clients/llm.js";
 import { conversationMemberRepository } from "../../db/repository/conservation-member.js";
 import { messageRepository } from "../../db/repository/messages.js";
 import { auth } from "../../lib/auth.js";
@@ -9,6 +10,7 @@ import type {
   ListMessagesPropType,
   UpdateMessagePropType,
 } from "./schema.js";
+import { invokeLLMForMessage } from "./utils.js";
 
 class Controller {
   async newMessage({ ctx, body }: CreateNewMessagePropType) {
@@ -30,10 +32,20 @@ class Controller {
       organizationId: ctx.organizationId,
       parentMessageId: body.parentMessageId,
       content: body.content,
-      mentions: body.mentions,
+      mentions: body.mentions.filter((men) => men != "consecto"),
     });
 
     // todo : announce message to socket
+
+    if (body.mentions.includes("consecto")) {
+      invokeLLMForMessage({ ctx, body }).catch(e=>{
+        return new HttpResponse({
+          code: ResponseCodes.SERVICE_UNAVAILABLE,
+          message: "Not able to invoke consecto",
+        });
+      })
+    }
+
     return new HttpResponse({
       code: ResponseCodes.CREATED,
       message: "Message sent",

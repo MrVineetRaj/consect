@@ -1,10 +1,19 @@
 import { and, desc, eq } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
+import { CONSECTO_BOT } from "../../lib/constants.js";
 import { db } from "../connection.js";
-import { message } from "../schema.js";
+import { message, user } from "../schema.js";
 
 type MessageType = typeof message.$inferSelect;
 class Repository {
+  /**
+   * Make sure the consecto bot exists as a `user` row so messages it sends can
+   * satisfy the sender_id foreign key. Idempotent — safe to call repeatedly.
+   */
+  async ensureBotUser() {
+    await db.insert(user).values(CONSECTO_BOT).onConflictDoNothing();
+  }
+
   async createNewMessage(
     args: Omit<MessageType, "id" | "createdAt" | "updatedAt">,
   ) {
@@ -25,32 +34,43 @@ class Repository {
     conversationId: string;
   }) {
     const result = await db.query.message.findFirst({
-      where: (fields, { eq, and }) => (
-        eq(fields.id, args.id),
-        eq(fields.organizationId, args.organizationId),
-        eq(fields.conversationId, args.conversationId)
-      ),
+      where: (fields, { eq, and }) =>
+        and(
+          eq(fields.id, args.id),
+          eq(fields.organizationId, args.organizationId),
+          eq(fields.conversationId, args.conversationId),
+        ),
     });
 
     return result;
   }
 
-  async getMessagesByConversationId(args: {
+  async getMessagesByConversationId({
+    conversationId,
+    organizationId,
+    limit = 200,
+    offset = 0,
+  }: {
     conversationId: string;
     organizationId: string;
+    limit?: number;
+    offset?: number;
   }) {
     const result = await db.query.message.findMany({
       where: (fields, { eq, and }) =>
         and(
-          eq(fields.conversationId, args.conversationId),
-          eq(fields.organizationId, args.organizationId),
+          eq(fields.conversationId, conversationId),
+          eq(fields.organizationId, organizationId),
         ),
       with: {
         sender: true,
       },
+      offset,
+      limit,
+      orderBy: desc(message.createdAt),
     });
 
-    return result;
+    return result.reverse();
   }
 
   async getMessagesByParentMessageId(args: {

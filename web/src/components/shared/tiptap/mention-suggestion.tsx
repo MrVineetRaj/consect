@@ -2,8 +2,12 @@
 import { ReactRenderer } from "@tiptap/react";
 import tippy, { type Instance } from "tippy.js";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { icons } from "@/lib/assets";
+import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
+import Image from "next/image";
 
-type MentionItem = { id: string; label: string };
+type MentionItem = { id: string; label: string; image: string | null };
 
 const MentionList = forwardRef(
   (
@@ -39,16 +43,18 @@ const MentionList = forwardRef(
       <div className="z-50 flex max-h-60 w-56 flex-col overflow-y-auto rounded-md border bg-popover p-1 shadow-md">
         {items.length ? (
           items.map((item, i) => (
-            <button
+            <span
               key={item.id}
-              type="button"
               onClick={() => command(item)}
-              className={`rounded px-2 py-1 text-left text-sm hover:bg-accent ${
-                i === selected ? "bg-accent" : ""
+              className={`rounded p-2 flex items-center text-sm hover:bg-accent/50 f gap-2 ${
+                i === selected ? "bg-accent/50" : ""
               }`}
             >
+              <Avatar>
+                <Image src={item.image ?? icons.avatar} alt="" height={50} width={50} className="rounded-full" />
+              </Avatar>
               {item.label}
-            </button>
+            </span>
           ))
         ) : (
           <div className="px-2 py-1 text-sm text-muted-foreground">
@@ -65,7 +71,6 @@ MentionList.displayName = "MentionList";
 export const makeMentionSuggestion = (
   users: {
     id: string;
-    email: string;
     name: string;
     image?: string | undefined | null;
   }[],
@@ -74,7 +79,11 @@ export const makeMentionSuggestion = (
     users
       .filter((u) => u.name.toLowerCase().includes(query.toLowerCase()))
       .slice(0, 5)
-      .map((u) => ({ id: u.id, label: u.name })),
+      .map((u) => ({
+        id: u.id,
+        label: u.name,
+        image: u.image ?? icons.avatar,
+      })),
 
   render: () => {
     let component: ReactRenderer;

@@ -1,0 +1,89 @@
+import z from "zod";
+import { HeaderKeys } from "../../lib/constants.js";
+
+export const ResourceTypeSchema = z.enum(["doc", "pdf", "url", "text", "md"]);
+
+export const CreateResourceInputSchema = z.object({
+  body: z.object({
+    type: ResourceTypeSchema,
+    name: z.string().optional(),
+    description: z.string().optional(),
+    // The raw resource (a URL, pasted text/markdown, or extracted file text).
+    // It is fed to the embedding pipeline; only the resulting embeddingId is
+    // persisted on the resource row.
+    content: z.string().nonempty(),
+    tags: z.array(z.string()).default([]),
+    allowedChannelIds: z.array(z.string()).default([]),
+  }),
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string().nonempty(),
+  }),
+});
+export type CreateResourcePropType = z.infer<typeof CreateResourceInputSchema>;
+
+export const CreateResourceHeadersSchema = z.object({
+  [HeaderKeys.organizationId]: z.string().meta({
+    description: "Organization the resource belongs to.",
+  }),
+});
+
+export const ListResourcesInputSchema = z.object({
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string(),
+  }),
+});
+export type ListResourcesPropType = z.infer<typeof ListResourcesInputSchema>;
+
+export const ListResourcesHeadersSchema = z.object({
+  [HeaderKeys.organizationId]: z.string().meta({
+    description: "Organization the resources belong to.",
+  }),
+});
+
+export const DeleteResourceInputSchema = z.object({
+  body: z.object({
+    id: z.string().nonempty(),
+  }),
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string(),
+  }),
+});
+export type DeleteResourcePropType = z.infer<typeof DeleteResourceInputSchema>;
+
+export const DeleteResourceHeadersSchema = z.object({
+  [HeaderKeys.organizationId]: z.string().meta({
+    description: "Organization the resource belongs to.",
+  }),
+});
+
+export const UpdateResourceMetaInputSchema = z.object({
+  body: z.object({
+    id: z.string().nonempty(),
+    name: z.string().optional(),
+    description: z.string().optional(),
+    allowedChannelIds: z.array(z.string()).optional(),
+    tags: z.array(z.string()).optional(),
+  }),
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string(),
+  }),
+});
+export type UpdateResourceMetaPropType = z.infer<
+  typeof UpdateResourceMetaInputSchema
+>;
+
+export const UpdateResourceMetaHeadersSchema = z.object({
+  [HeaderKeys.organizationId]: z.string().meta({
+    description: "Organization the resource belongs to.",
+  }),
+});
+
+export const AiHubResponseSchema = z.object({
+  code: z.number(),
+  message: z.string(),
+  result: z.any().optional(),
+});
