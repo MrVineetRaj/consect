@@ -26,14 +26,16 @@ const getInitials = (name: string) =>
 export const ConversationAvatar = ({
   image,
   members,
+  isOnline = false,
 }: {
   image?: string | null;
   members: ConversationMember[];
+  isOnline: boolean;
 }) => {
   // A dedicated conversation image always wins.
   if (image) {
     return (
-      <Avatar size="sm">
+      <Avatar size="sm" className="relative">
         <AvatarImage src={image} alt="" />
         <AvatarFallback>#</AvatarFallback>
       </Avatar>
@@ -49,15 +51,20 @@ export const ConversationAvatar = ({
   }
 
   return (
-    <AvatarGroup data-size="sm">
-      {shown.map((member) => (
-        <Avatar key={member.id} size="sm">
-          <AvatarImage src={member.image ?? icons.avatar} alt={member.name} />
+    <div className="relative inline-flex">
+      <AvatarGroup data-size="sm">
+        {shown.map((member) => (
+          <Avatar key={member.id} size="sm">
+            <AvatarImage src={member.image ?? icons.avatar} alt={member.name} />
 
-          <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-        </Avatar>
-      ))}
-      {extra > 0 ? <AvatarGroupCount>+{extra}</AvatarGroupCount> : null}
-    </AvatarGroup>
+            <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
+          </Avatar>
+        ))}
+        {extra > 0 ? <AvatarGroupCount>+{extra}</AvatarGroupCount> : null}
+      </AvatarGroup>
+      {isOnline ? (
+        <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-green-500 ring-2 ring-background" />
+      ) : null}
+    </div>
   );
 };
