@@ -102,7 +102,7 @@ const HomePage = async () => {
                 className="group flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm transition-colors hover:border-primary/40"
               >
                 <div className="flex items-center justify-between">
-                  <div className="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary">
+                  <div className="grid size-11 place-items-center rounded-xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">
                     <Icon className="size-5" />
                   </div>
                   <ArrowRightIcon className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
@@ -123,7 +123,7 @@ const HomePage = async () => {
           {/* Channels */}
           <section className="flex flex-col gap-4 rounded-2xl border bg-card p-6 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary">
+              <div className="grid size-10 place-items-center rounded-xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">
                 <HashIcon className="size-5" />
               </div>
               <div>
@@ -166,7 +166,7 @@ const HomePage = async () => {
           {/* Direct messages */}
           <section className="flex flex-col gap-4 rounded-2xl border bg-card p-6 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary">
+              <div className="grid size-10 place-items-center rounded-xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">
                 <UsersIcon className="size-5" />
               </div>
               <div>
@@ -206,7 +206,7 @@ const HomePage = async () => {
         </div>
 
         {/* AI Hub feature highlight */}
-        <div className="grid gap-6 rounded-2xl border bg-gradient-to-br from-primary/5 to-accent/5 p-6 md:grid-cols-2 md:items-center">
+        <div className="grid gap-6 rounded-2xl border bg-linear-to-br from-primary/5 to-accent/5 p-6 md:grid-cols-2 md:items-center">
           <div className="space-y-4">
             <Badge
               variant="outline"
@@ -234,7 +234,7 @@ const HomePage = async () => {
             </Link>
           </div>
           <div className="grid aspect-video place-items-center gap-2 rounded-xl border bg-background/60 text-center">
-            <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary">
+            <div className="grid size-12 place-items-center rounded-xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">
               <ScanSearchIcon className="size-6" />
             </div>
             <div>

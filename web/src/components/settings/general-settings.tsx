@@ -65,7 +65,7 @@ export const GeneralSettings = () => {
         {/* Profile hero card */}
         <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
           {/* Gradient cover */}
-          <div className="h-24 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20" />
+          <div className="h-24 bg-linear-to-br from-primary/20 via-primary/10 to-accent/20" />
 
           <div className="px-6 pb-6">
             <div className="-mt-12 flex flex-wrap items-end gap-5">
@@ -137,7 +137,7 @@ export const GeneralSettings = () => {
           {/* Personal details — main column */}
           <section className="rounded-2xl border bg-card p-6 shadow-sm transition-colors hover:border-primary/40 lg:col-span-2">
             <div className="mb-5 flex items-center gap-3">
-              <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary">
+              <div className="grid size-10 place-items-center rounded-xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">
                 <UserIcon className="size-5" />
               </div>
               <div>
@@ -235,7 +235,7 @@ export const GeneralSettings = () => {
             </section>
 
             {/* Pro membership upsell */}
-            <section className="rounded-2xl border bg-gradient-to-br from-primary/10 to-accent/10 p-6 shadow-sm">
+            <section className="rounded-2xl border bg-linear-to-br from-primary/10 to-accent/10 p-6 shadow-sm">
               <Badge
                 variant="outline"
                 className="gap-1.5 rounded-full border-primary/30 text-primary"
@@ -257,7 +257,7 @@ export const GeneralSettings = () => {
         {/* Active sessions — full width */}
         <section className="mt-6 rounded-2xl border bg-card p-6 shadow-sm transition-colors hover:border-primary/40">
           <div className="flex items-center gap-3">
-            <div className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary">
+            <div className="grid size-10 place-items-center rounded-xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">
               <ShieldIcon className="size-5" />
             </div>
             <div>

@@ -133,13 +133,13 @@ function AnimatedBackdrop({ grid = true }: { grid?: boolean }) {
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
     >
       {grid && <div className="bg-grid absolute inset-0" />}
-      <div className="animate-aurora absolute -top-32 left-1/2 size-[42rem] -translate-x-1/2 rounded-full bg-primary/25 blur-3xl" />
+      <div className="animate-aurora absolute -top-32 left-1/2 size-168 -translate-x-1/2 rounded-full bg-primary/25 blur-3xl" />
       <div
-        className="animate-aurora absolute -right-24 top-24 size-[28rem] rounded-full bg-accent/25 blur-3xl"
+        className="animate-aurora absolute -right-24 top-24 size-112 rounded-full bg-accent/25 blur-3xl"
         style={{ animationDelay: "-6s" }}
       />
       <div
-        className="animate-aurora absolute -left-24 top-48 size-[24rem] rounded-full bg-chart-4/20 blur-3xl"
+        className="animate-aurora absolute -left-24 top-48 size-96 rounded-full bg-chart-4/20 blur-3xl"
         style={{ animationDelay: "-12s" }}
       />
     </div>
@@ -194,7 +194,7 @@ function ProductPreview() {
         </aside>
 
         {/* conversation */}
-        <div className="flex min-h-[20rem] flex-col">
+        <div className="flex min-h-80 flex-col">
           <div className="flex items-center gap-2 border-b border-border/60 px-4 py-3">
             <HashIcon className="size-4 text-muted-foreground" />
             <span className="text-sm font-medium">general</span>
@@ -492,7 +492,7 @@ export default function LandingPage() {
             >
               {/* hover glow */}
               <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                <div className="absolute -top-px left-6 right-6 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+                <div className="absolute -top-px left-6 right-6 h-px bg-linear-to-r from-transparent via-primary/60 to-transparent" />
               </div>
               <span className="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
                 <Icon className="size-5" />

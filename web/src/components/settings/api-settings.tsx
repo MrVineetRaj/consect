@@ -40,7 +40,7 @@ export const ApiSettings = () => {
         {/* Keys list / empty state */}
         {API_KEYS.length === 0 ? (
           <div className="grid w-full place-items-center gap-3 rounded-2xl border border-dashed py-20 text-center">
-            <div className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary">
+            <div className="grid size-12 place-items-center rounded-2xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">
               <KeyRoundIcon className="size-6" />
             </div>
             <div>
@@ -61,7 +61,7 @@ export const ApiSettings = () => {
                 key={key.id}
                 className="flex flex-wrap items-center gap-4 rounded-2xl border bg-card p-4 shadow-sm transition-colors hover:border-primary/40"
               >
-                <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary">
+                <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">
                   <KeyRoundIcon className="size-5" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -97,7 +97,7 @@ export const ApiSettings = () => {
         )}
 
         {/* Docs highlight */}
-        <div className="mt-8 grid gap-6 rounded-2xl border bg-gradient-to-br from-primary/5 to-accent/5 p-6 md:grid-cols-2 md:items-center">
+        <div className="mt-8 grid gap-6 rounded-2xl border bg-linear-to-br from-primary/5 to-accent/5 p-6 md:grid-cols-2 md:items-center">
           <div className="space-y-3">
             <Badge
               variant="outline"
@@ -116,7 +116,7 @@ export const ApiSettings = () => {
             </p>
           </div>
           <div className="grid aspect-video place-items-center gap-2 rounded-xl border bg-background/60 text-center">
-            <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary">
+            <div className="grid size-12 place-items-center rounded-xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">
               <KeyRoundIcon className="size-6" />
             </div>
             <div>

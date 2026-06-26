@@ -66,7 +66,7 @@ export const ConnectorsSettings = () => {
               className="group flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm transition-colors hover:border-primary/40"
             >
               <div className="flex items-start justify-between gap-2">
-                <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary">
+                <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">
                   <PlugIcon className="size-5" />
                 </div>
                 {connector.connected ? (
