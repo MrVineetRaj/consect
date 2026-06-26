@@ -8,6 +8,7 @@ import {
 } from "./schema.js";
 import { vectorDB } from "../../vector_db/client.js";
 import { conversationRepository } from "../../db/repository/conversation.js";
+import io from "../../socket/socket-io.js";
 
 export async function invokeLLMForMessage({
   ctx,
@@ -38,15 +39,13 @@ export async function invokeLLMForMessage({
     resourceForChannels = temp;
   }
 
-
-  // fetching old messages for current conversation 
+  // fetching old messages for current conversation
   const oldMessages = await messageRepository.getMessagesByConversationId({
     conversationId: ctx.conversationId,
     organizationId: ctx.organizationId,
     limit: 20,
     offset: 1,
   });
-
 
   // generating user query variants for properly reading resource and then giving user a valid answer
   const optimizedQueries = (await llmClient.getLLMResponse<
@@ -64,7 +63,6 @@ export async function invokeLLMForMessage({
     },
   })) as z.infer<typeof LLMOptimizedQueriesSchema>;
   let context = "";
-
 
   if (optimizedQueries) {
     // generating embeddings for query variant
@@ -127,7 +125,6 @@ export async function invokeLLMForMessage({
         };
       });
 
-
     // generating a context used fused content
     context = results
       .map(
@@ -140,7 +137,6 @@ export async function invokeLLMForMessage({
       )
       .join("\n\n");
   }
-
 
   // finally getting llm response for user query
   const llmResponse = await llmClient.getLLMResponse({
@@ -162,9 +158,8 @@ export async function invokeLLMForMessage({
             `,
   });
 
-
   await messageRepository.ensureBotUser();
-  await messageRepository.createNewMessage({
+  const result = await messageRepository.createNewMessage({
     senderId: CONSECTO_BOT.id,
     conversationId: ctx.conversationId,
     organizationId: ctx.organizationId,
@@ -173,5 +168,8 @@ export async function invokeLLMForMessage({
     mentions: [],
   });
 
+  io.to("convo_" + ctx.conversationId).emit("new_message", {
+    message: result,
+  });
   // todo : send message to the room via socket
 }

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useUserStore } from "@/store/user-store";
 import { useMessageClient } from "@/hooks/use-messages";
 import { cn } from "@/lib/utils";
+import { socket } from "@/lib/socket-io";
 
 /** Midnight timestamp for the given date — used to compare calendar days. */
 const startOfDay = (date: Date) => {
@@ -129,6 +130,16 @@ export const MessageShell = ({
     focusRef.current?.scrollIntoView();
   }, [messages]);
 
+  useEffect(() => {
+    socket.emit("join_conversation", {
+      conversationId: conversationId,
+    });
+
+    socket.on("new_message", (res: { message: IMessage }) => {
+      setMessages((prev) => [...prev, { ...res.message }]);
+    });
+  }, []);
+
   async function handleSend() {
     // Empty check on plain text, but send the rich HTML as the body.
     const text = editorRef.current?.getText() ?? "";
@@ -147,7 +158,6 @@ export const MessageShell = ({
       });
       // The server returns the row without the `sender` relation, so attach
       // the current user for immediate rendering.
-      setMessages((prev) => [...prev, { ...result, sender: user as IUser }]);
       editorRef.current?.clear();
     } catch {
       toast.error("Failed to send message");

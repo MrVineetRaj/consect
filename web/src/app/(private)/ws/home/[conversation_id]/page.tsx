@@ -42,7 +42,7 @@ const ConversationId = async ({
           organizationId={organizationId}
         />
       </div>
-      <div className="flex-2 bg-muted rounded-l-2xl" />
+      <div className="flex-2 bg-muted rounded-l-2xl hidden md:block" />
       <OrganizationModel />
     </main>
   );

@@ -3,6 +3,7 @@ import { llmClient } from "../../clients/llm.js";
 import { conversationMemberRepository } from "../../db/repository/conservation-member.js";
 import { messageRepository } from "../../db/repository/messages.js";
 import { auth } from "../../lib/auth.js";
+import io from "../../socket/socket-io.js";
 import { ResponseCodes } from "../../types/codes.js";
 import type {
   CreateNewMessagePropType,
@@ -36,14 +37,17 @@ class Controller {
     });
 
     // todo : announce message to socket
+    io.to("convo_" + ctx.conversationId).emit("new_message", {
+      message: result,
+    });
 
     if (body.mentions.includes("consecto")) {
-      invokeLLMForMessage({ ctx, body }).catch(e=>{
+      invokeLLMForMessage({ ctx, body }).catch((e) => {
         return new HttpResponse({
           code: ResponseCodes.SERVICE_UNAVAILABLE,
           message: "Not able to invoke consecto",
         });
-      })
+      });
     }
 
     return new HttpResponse({
