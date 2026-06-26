@@ -22,8 +22,6 @@ async def embed_document(data: EmbedDocumentRequest):
         secure_url=data.secureURL,
         public_id=data.publicId,
     )
-    print(f"Document cached at: {document_path}")
-
     # Read the document and extract text
     text = readDocuments(data.type, document_path)
 

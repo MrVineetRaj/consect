@@ -336,7 +336,7 @@ export const AiHubResources = ({
             onClick={() => setFormOpen(true)}
             className="grid w-full place-items-center gap-3 rounded-2xl border border-dashed py-20 text-center transition-colors hover:border-primary/40 hover:bg-muted/30"
           >
-            <div className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary">
+            <div className="grid size-12 place-items-center rounded-2xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">
               <UploadIcon className="size-6" />
             </div>
             <p className="text-sm text-muted-foreground">
@@ -344,7 +344,7 @@ export const AiHubResources = ({
             </p>
           </button>
         ) : (
-          <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-3 2xl:grid-cols-4">
             {sortedResources.map((resource) => {
               const meta = resource.type
                 ? TYPE_META[resource.type]
@@ -364,7 +364,7 @@ export const AiHubResources = ({
                 >
                   {/* Top row: icon · status · menu */}
                   <div className="flex items-start justify-between gap-2">
-                    <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15">
+                    <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-linear-to-br from-primary/15 to-accent/15">
                       <Image
                         src={meta.image}
                         alt={meta.label}
@@ -476,7 +476,7 @@ export const AiHubResources = ({
                     ) : !isReady ? (
                       <div className="space-y-2">
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                          <div className="h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-primary to-accent" />
+                          <div className="h-full w-1/2 animate-pulse rounded-full bg-linear-to-r from-primary to-accent" />
                         </div>
                         <p className="text-xs text-muted-foreground">
                           Indexing in progress…
@@ -507,7 +507,7 @@ export const AiHubResources = ({
         )}
 
         {/* Feature highlight */}
-        <div className="grid gap-6 rounded-2xl border bg-gradient-to-br from-primary/5 to-accent/5 p-6 md:grid-cols-2 md:items-center">
+        <div className="grid gap-6 rounded-2xl border bg-linear-to-br from-primary/5 to-accent/5 p-6 md:grid-cols-2 md:items-center">
           <div className="space-y-4">
             <Badge
               variant="outline"
@@ -528,7 +528,7 @@ export const AiHubResources = ({
             </p>
           </div>
           <div className="grid aspect-video place-items-center gap-2 rounded-xl border bg-background/60 text-center">
-            <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary">
+            <div className="grid size-12 place-items-center rounded-xl bg-linear-to-br from-primary/15 to-accent/15 text-primary">
               <ScanSearchIcon className="size-6" />
             </div>
             <div>

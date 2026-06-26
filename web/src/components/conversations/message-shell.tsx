@@ -97,7 +97,7 @@ const MessageBox = ({ msg, isOwn }: { msg: IMessage; isOwn: boolean }) => {
           )}
         >
           <div
-            className="prose prose-sm dark:prose-invert max-w-none break-words prose-p:my-0"
+            className="prose prose-sm dark:prose-invert max-w-none wrap-break-word prose-p:my-0"
             dangerouslySetInnerHTML={{ __html: msg.content }}
           />
         </div>

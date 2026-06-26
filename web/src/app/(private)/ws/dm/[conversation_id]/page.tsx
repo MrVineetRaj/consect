@@ -5,13 +5,13 @@ import { usePreferenceClient } from "@/hooks/use-preference";
 import { useAuthServer } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 
-const ConversationId = async ({
+const DmConversationPage = async ({
   params,
 }: {
   params: Promise<{ conversation_id: string }>;
 }) => {
   const { conversation_id } = await params;
-  
+
   const { getServerSession } = useAuthServer();
   const { listMessages } = useMessageClient();
   const session = await getServerSession();
@@ -48,4 +48,4 @@ const ConversationId = async ({
   );
 };
 
-export default ConversationId;
+export default DmConversationPage;

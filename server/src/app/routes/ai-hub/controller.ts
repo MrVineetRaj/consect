@@ -17,6 +17,7 @@ class Controller {
     const { publicId, secureURL } = await cloudinaryClient.uploadResource({
       content: body.content,
       folder: `consect/ws_${ctx.organizationId}/ai_hub`,
+      displayName: body.name,
     });
 
     // TODO: run `body.content` through the embedding pipeline (vector_db) and

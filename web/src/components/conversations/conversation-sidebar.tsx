@@ -2,10 +2,11 @@
 import { ConversationAvatar } from "@/components/shared/conversation-avatar";
 import { cn } from "@/lib/utils";
 import { useOrganizationStore } from "@/store/organization-store";
-import { HashIcon, PlusIcon } from "lucide-react";
+import { HashIcon, PlusIcon, SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
 
 type Channel = { id: string; name: string | null };
 
@@ -50,16 +51,37 @@ const dmLabel = (c: DmConversation) =>
 export const ConversationSidebar = ({
   channels,
   dmAndGroups,
+  isDMPage = false,
 }: {
   channels: Channel[];
   dmAndGroups: DmConversation[];
+  isDMPage?: boolean;
 }) => {
   const { orgPresence } = useOrganizationStore();
   const pathname = usePathname();
+  const [query, setQuery] = useState("");
 
-  useEffect(() => {
-    console.log("orgPresence",{orgPresence});
-  }, [orgPresence]);
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const filteredChannels = useMemo(
+    () =>
+      normalizedQuery
+        ? channels.filter((c) =>
+            (c.name ?? "untitled").toLowerCase().includes(normalizedQuery),
+          )
+        : channels,
+    [channels, normalizedQuery],
+  );
+
+  const filteredDms = useMemo(
+    () =>
+      normalizedQuery
+        ? dmAndGroups.filter((c) =>
+            dmLabel(c).toLowerCase().includes(normalizedQuery),
+          )
+        : dmAndGroups,
+    [dmAndGroups, normalizedQuery],
+  );
 
   const itemClass = (isActive: boolean) =>
     cn(
@@ -71,39 +93,57 @@ export const ConversationSidebar = ({
 
   return (
     <aside className="flex w-72 flex-col border-r border-border/60 bg-muted/40">
-      <div className="flex items-center justify-between px-4 py-3.5">
+      <div className="flex flex-col gap-3 px-4 py-3.5">
         <h2 className="text-sm font-semibold tracking-tight">Messages</h2>
+        <div className="relative">
+          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/70" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search conversations"
+            className="h-8 bg-background/60 pl-8 text-sm"
+          />
+        </div>
       </div>
 
       <nav className="flex-1 min-h-0 space-y-5 overflow-y-auto px-2 pb-4">
+        {!isDMPage && (
+          <div>
+            <SectionHeader title="Channels" count={filteredChannels.length} />
+            {filteredChannels.length === 0 ? (
+              <EmptyHint>
+                {normalizedQuery ? "No matching channels" : "No channels yet"}
+              </EmptyHint>
+            ) : (
+              filteredChannels.map((channel) => {
+                const isActive = pathname.includes(channel.id);
+                return (
+                  <Link
+                    key={channel.id}
+                    href={`/ws/home/${channel.id}`}
+                    aria-current={isActive ? "page" : undefined}
+                    className={itemClass(isActive)}
+                  >
+                    <HashIcon className="size-4 shrink-0 opacity-70" />
+                    <span className="truncate">
+                      {channel.name ?? "Untitled"}
+                    </span>
+                  </Link>
+                );
+              })
+            )}
+          </div>
+        )}
         <div>
-          <SectionHeader title="Channels" count={channels.length} />
-          {channels.length === 0 ? (
-            <EmptyHint>No channels yet</EmptyHint>
+          <SectionHeader title="Direct Messages" count={filteredDms.length} />
+          {filteredDms.length === 0 ? (
+            <EmptyHint>
+              {normalizedQuery
+                ? "No matching conversations"
+                : "No direct messages yet"}
+            </EmptyHint>
           ) : (
-            channels.map((channel) => {
-              const isActive = pathname.includes(channel.id);
-              return (
-                <Link
-                  key={channel.id}
-                  href={`/ws/home/${channel.id}`}
-                  aria-current={isActive ? "page" : undefined}
-                  className={itemClass(isActive)}
-                >
-                  <HashIcon className="size-4 shrink-0 opacity-70" />
-                  <span className="truncate">{channel.name ?? "Untitled"}</span>
-                </Link>
-              );
-            })
-          )}
-        </div>
-
-        <div>
-          <SectionHeader title="Direct Messages" count={dmAndGroups.length} />
-          {dmAndGroups.length === 0 ? (
-            <EmptyHint>No direct messages yet</EmptyHint>
-          ) : (
-            dmAndGroups.map((conversation) => {
+            filteredDms.map((conversation) => {
               const isActive = pathname.includes(conversation.id);
               const isOnline =
                 conversation.type == "group"
@@ -113,7 +153,7 @@ export const ConversationSidebar = ({
               return (
                 <Link
                   key={conversation.id}
-                  href={`/ws/home/${conversation.id}`}
+                  href={`/ws/${isDMPage ? "dm" : "home"}/${conversation.id}`}
                   aria-current={isActive ? "page" : undefined}
                   className={itemClass(isActive)}
                 >
