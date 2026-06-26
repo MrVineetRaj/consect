@@ -344,7 +344,7 @@ export const AiHubResources = ({
             </p>
           </button>
         ) : (
-          <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-3 2xl:grid-cols-4">
             {sortedResources.map((resource) => {
               const meta = resource.type
                 ? TYPE_META[resource.type]

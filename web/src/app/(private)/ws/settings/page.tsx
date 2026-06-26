@@ -1,14 +1,17 @@
 "use client";
+import { ApiSettings } from "@/components/settings/api-settings";
+import { ConnectorsSettings } from "@/components/settings/connectors-settings";
 import { GeneralSettings } from "@/components/settings/general-settings";
 import { cn } from "@/lib/utils";
-import { UserIcon } from "lucide-react";
+import { KeyRoundIcon, PlugIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { Suspense } from "react";
 
 const NAVIGATION = [
   { label: "General", tab: "general", icon: UserIcon },
-  // { label: "Account", tab: "account", icon: ShieldIcon },
+  { label: "Connectors", tab: "connectors", icon: PlugIcon },
+  { label: "API", tab: "api", icon: KeyRoundIcon },
 ] as const;
 
 type SettingsTab = (typeof NAVIGATION)[number]["tab"];
@@ -48,7 +51,8 @@ const SettingsContent = () => {
       </aside>
       <div className="flex-1 min-h-0 overflow-auto">
         {activeTab === "general" && <GeneralSettings />}
-        {/* {activeTab === "account" && <p>Account settings</p>} */}
+        {activeTab === "connectors" && <ConnectorsSettings />}
+        {activeTab === "api" && <ApiSettings />}
       </div>
     </div>
   );
