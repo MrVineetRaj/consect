@@ -61,6 +61,18 @@ interface IAiHubResource {
   updatedAt: Date;
 }
 
+interface IApiKey {
+  id: string;
+  name: string | null;
+  apiKey: string;
+  // Only returned once, at creation time. Never sent back on listing.
+  apiSecret?: string;
+  userId: string;
+  organizationId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 interface IOrganizationMembers {
   id: string;
   organizationId: string;

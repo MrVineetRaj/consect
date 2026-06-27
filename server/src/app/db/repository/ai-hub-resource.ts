@@ -1,4 +1,4 @@
-import { and, desc, eq, lte, or } from "drizzle-orm";
+import { and, desc, eq, inArray, lte, or } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
 import { db } from "../connection.js";
 import { aiHubResource } from "../schema.js";
@@ -88,7 +88,7 @@ class Repository {
     const failedResources = await db
       .select()
       .from(aiHubResource)
-      .where(eq(aiHubResource.status, "failed"));
+      .where(inArray(aiHubResource.status, ["failed", "processing"]));
 
     const last2Hr = new Date(new Date().getTime() - 2 * 60 * 60 * 1000);
 

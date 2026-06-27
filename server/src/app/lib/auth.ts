@@ -4,8 +4,23 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db/connection.js";
 import * as schema from "../db/schema.js";
 import { env } from "../../env.js";
+import { cachingClient } from "../clients/caching.js";
+import { conversationRepository } from "../db/repository/conversation.js";
+import { vectorDB } from "../vector_db/client.js";
 
 export const auth = betterAuth({
+  secondaryStorage: {
+    get: async (key) => {
+      return await cachingClient.get(key);
+    },
+    set: async (key, value, ttl) => {
+      if (ttl) await cachingClient.setex(key, ttl, value);
+      else await cachingClient.set(key, value);
+    },
+    delete: async (key) => {
+      await cachingClient.del(key);
+    },
+  },
   rateLimit: {
     enabled: false,
     window: 10, // time window in seconds
@@ -58,5 +73,18 @@ export const auth = betterAuth({
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
   },
-  plugins: [organization(), openAPI(), bearer()],
+  plugins: [
+    organization({
+      organizationHooks: {
+        afterCreateOrganization: async ({ organization, member, user }) => {
+          vectorDB.initCollection({
+            size: 1536,
+            collection: organization.id,
+          });
+        },
+      },
+    }),
+    openAPI(),
+    bearer(),
+  ],
 });

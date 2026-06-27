@@ -279,3 +279,8 @@
     transform: none;
   }
 }
+
+
+.cite{
+  @apply text-muted-foreground text-sm;
+}

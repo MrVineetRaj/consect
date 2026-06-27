@@ -12,6 +12,7 @@ import {
   organization,
   user,
 } from "./schema.js";
+import { vectorDB } from "../vector_db/client.js";
 
 const USER_COUNT = 10;
 const WORKSPACE_COUNT = 3;
@@ -71,6 +72,12 @@ async function seed() {
 
   await db.insert(organization).values(organizations);
   console.log(`✅ Inserted ${organizations.length} workspaces`);
+
+  await Promise.all(
+    organizations.map((org) =>
+      vectorDB.initCollection({ size: 1536, collection: org.id }),
+    ),
+  );
 
   // --- Members: distribute every user across every workspace ---
   const members = organizations.flatMap((org, orgIdx) =>
@@ -155,9 +162,7 @@ async function seed() {
   });
 
   await db.insert(conversationMember).values(conversationMembers);
-  console.log(
-    `✅ Inserted ${conversationMembers.length} conversation members`,
-  );
+  console.log(`✅ Inserted ${conversationMembers.length} conversation members`);
 
   // --- Messages: a few per conversation ---
   const messages = conversations.flatMap((conv) =>

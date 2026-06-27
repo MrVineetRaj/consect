@@ -27,6 +27,14 @@ import {
   router as aiHubRoutes,
   AI_HUB_BASE_PATH,
 } from "./routes/ai-hub/routes.js";
+import {
+  router as apiKeyRoutes,
+  API_KEY_BASE_PATH,
+} from "./routes/api-key/routes.js";
+import {
+  router as consectoRoutes,
+  CONSECTO_API_BASE_PATH,
+} from "./routes/consecto/routes.js";
 import { buildOpenApiDocument } from "./adapter/openapi.js";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
@@ -61,6 +69,8 @@ export function createExpressApp(): Application {
   app.use(USER_PREFERENCE_BASE_PATH, userPreferenceRoutes);
   app.use(ORGANIZATION_BASE_PATH, organizationRoutes);
   app.use(AI_HUB_BASE_PATH, aiHubRoutes);
+  app.use(API_KEY_BASE_PATH, apiKeyRoutes);
+  app.use(CONSECTO_API_BASE_PATH, consectoRoutes);
   app.use(WEBHOOK_BASE_PATH, webhookRoutes);
 
   // Auto-generated API docs. The document is built from the Zod schemas

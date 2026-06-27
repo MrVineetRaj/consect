@@ -21,25 +21,28 @@ def _detect_word_extension(file_path: str) -> str:
 
 
 def readDocuments(type: DocumentType, file_path: str):
-    if type == DocumentType.TEXT or type == DocumentType.MD:
-        with open(file_path, "r", encoding="utf-8") as f:
-            text = f.read()
-        return text
+    try:
+        if type == DocumentType.TEXT or type == DocumentType.MD:
+            with open(file_path, "r", encoding="utf-8") as f:
+                text = f.read()
+            return text
 
-    if type == DocumentType.PDF:
-        reader = PdfReader(file_path)
-        print(f"Number of pages: {len(reader.pages)}")
+        if type == DocumentType.PDF:
+            reader = PdfReader(file_path)
+            print(f"Number of pages: {len(reader.pages)}")
 
-        # Extract text from every page, not just the first.
-        text = "\n".join(page.extract_text() or "" for page in reader.pages)
-        return text
+            # Extract text from every page, not just the first.
+            text = "\n".join(page.extract_text() or "" for page in reader.pages)
+            return text
 
-    if type == DocumentType.DOC:
-        extension = _detect_word_extension(file_path)
-        print(f"Reading Word document as .{extension}")
-        # textract needs the extension hint since the cached file has none.
-        raw = textract.process(file_path, extension=extension)
-        text = raw.decode("utf-8", errors="ignore")
-        return text
+        if type == DocumentType.DOC:
+            extension = _detect_word_extension(file_path)
+            print(f"Reading Word document as .{extension}")
+            # textract needs the extension hint since the cached file has none.
+            raw = textract.process(file_path, extension=extension)
+            text = raw.decode("utf-8", errors="ignore")
+            return text
 
-    raise ValueError(f"Unsupported document type: {type}")
+        raise ValueError(f"Unsupported document type: {type}")
+    except Exception as _:
+        return ""

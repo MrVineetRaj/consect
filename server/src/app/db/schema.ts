@@ -8,6 +8,7 @@ import {
   uniqueIndex,
   pgEnum,
   jsonb,
+  integer,
 } from "drizzle-orm/pg-core";
 
 export const accessConfigSpaceEnum = pgEnum("access_config_space_enum", [
@@ -300,6 +301,27 @@ export const aiHubResource = pgTable("ai_hub_resource", {
     .notNull(),
 });
 
+export const apiKey = pgTable("api_key", {
+  id: text("id").primaryKey(),
+  name: text("name"),
+  apiKey: text("api_key").notNull(),
+  apiSecret: text("api_secret").notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, {
+      onDelete: "cascade",
+    }),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organization.id, {
+      onDelete: "cascade",
+    }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
 export const userRelations = relations(user, ({ many, one }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -308,6 +330,7 @@ export const userRelations = relations(user, ({ many, one }) => ({
   accessConfigs: many(accessConfig),
   conversationMembers: many(conversationMember),
   messages: many(message),
+  apiKeys: many(apiKey),
   sentConversationInvitations: many(conversationInvitation, {
     relationName: "invitationSender",
   }),
@@ -335,6 +358,7 @@ export const organizationRelations = relations(organization, ({ many }) => ({
   invitations: many(invitation),
   accessConfigs: many(accessConfig),
   conversations: many(conversation),
+  apiKeys: many(apiKey),
   // conversationMembers: many(conversationMember),
   messages: many(message),
 }));
@@ -451,5 +475,15 @@ export const userPreferenceRelations = relations(userPreference, ({ one }) => ({
   user: one(user, {
     fields: [userPreference.userId],
     references: [user.id],
+  }),
+}));
+export const apiKeyRelations = relations(apiKey, ({ one }) => ({
+  user: one(user, {
+    fields: [apiKey.userId],
+    references: [user.id],
+  }),
+  organization: one(organization, {
+    fields: [apiKey.organizationId],
+    references: [organization.id],
   }),
 }));
