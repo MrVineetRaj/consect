@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Avatar } from "../ui/avatar";
 import { Label } from "../ui/label";
 import { TiptapTextArea, type TiptapHandle } from "../shared/tiptap/textarea";
-import { MicIcon, SendIcon } from "lucide-react";
+import { MicIcon, SendIcon, StarsIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { Spinner } from "../ui/spinner";
 import { toast } from "sonner";
@@ -51,6 +51,8 @@ const MessageBox = ({ msg, isOwn }: { msg: IMessage; isOwn: boolean }) => {
     minute: "2-digit",
   });
 
+  const isAI = msg.senderId == "consecto";
+
   return (
     <div
       className={cn(
@@ -78,12 +80,15 @@ const MessageBox = ({ msg, isOwn }: { msg: IMessage; isOwn: boolean }) => {
           isOwn ? "items-end" : "items-start",
         )}
       >
-        <div className="flex items-baseline gap-2 px-1">
+        <div className="flex items-center gap-2 px-1">
           {!isOwn && (
             <Label className="text-xs font-semibold text-primary">
               {msg.sender.name}
             </Label>
           )}
+          <span className="text-[10px] text-muted-foreground">
+            {isAI && <StarsIcon className="size-3 text-primary"/>}
+          </span>
           <span className="text-[10px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
             {time}
           </span>
@@ -94,6 +99,7 @@ const MessageBox = ({ msg, isOwn }: { msg: IMessage; isOwn: boolean }) => {
             isOwn
               ? "rounded-2xl rounded-tr-md bg-primary/15 text-foreground ring-1 ring-primary/20"
               : "rounded-2xl rounded-tl-md bg-muted text-foreground",
+            isAI ? "border-l-2 rounded-l-none border-primary" : "",
           )}
         >
           <div
