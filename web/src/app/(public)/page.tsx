@@ -9,11 +9,14 @@ import {
   GlobeIcon,
   HashIcon,
   HexagonIcon,
+  KeyRoundIcon,
   LockIcon,
   type LucideIcon,
   MessagesSquareIcon,
+  PlugIcon,
   SearchIcon,
   SparklesIcon,
+  TerminalIcon,
   UsersIcon,
   ZapIcon,
 } from "lucide-react";
@@ -82,6 +85,24 @@ const AI_HUB_POINTS: { icon: LucideIcon; title: string; body: string }[] = [
     icon: SearchIcon,
     title: "Grounded answers",
     body: "Ask in any channel and get answers cited from your own knowledge — not the open internet.",
+  },
+];
+
+const API_POINTS: { icon: LucideIcon; title: string; body: string }[] = [
+  {
+    icon: KeyRoundIcon,
+    title: "Scoped API keys",
+    body: "Mint a key and secret from your workspace settings. Secrets are hashed at rest — shown once, never again.",
+  },
+  {
+    icon: PlugIcon,
+    title: "One endpoint to ask",
+    body: "POST a message to /api/consecto/chat and get a grounded answer back — no SDK, no setup.",
+  },
+  {
+    icon: SparklesIcon,
+    title: "Answers from your hub",
+    body: "Every API answer is retrieved from the same AI Hub your team uses, so apps and chat stay in sync.",
   },
 ];
 
@@ -306,6 +327,59 @@ function TypingBubble() {
   );
 }
 
+/** A stylized terminal window showing a live Consecto API call. */
+function CodeWindow() {
+  return (
+    <div className="animate-float-slow relative overflow-hidden rounded-2xl border border-border/70 bg-[#0b0f17] shadow-2xl">
+      <div className="animate-shimmer pointer-events-none absolute inset-0" />
+      {/* title bar */}
+      <div className="relative flex items-center gap-2 border-b border-white/10 px-4 py-3">
+        <span className="size-3 rounded-full bg-red-400/80" />
+        <span className="size-3 rounded-full bg-yellow-400/80" />
+        <span className="size-3 rounded-full bg-green-400/80" />
+        <span className="ml-2 flex items-center gap-1.5 text-xs text-white/50">
+          <TerminalIcon className="size-3.5" />
+          consecto chat — POST /api/consecto/chat
+        </span>
+      </div>
+      {/* body */}
+      <pre className="relative overflow-x-auto p-5 font-mono text-[13px] leading-relaxed">
+        <code className="block whitespace-pre">
+          <span className="text-emerald-400">curl</span>
+          <span className="text-white/80"> -X POST https://api.consect.app/api/consecto/chat</span>
+          {"\n  "}
+          <span className="text-sky-400">-H</span>
+          <span className="text-amber-300"> &quot;x-api-key: ck_live_••••&quot;</span>
+          {"\n  "}
+          <span className="text-sky-400">-H</span>
+          <span className="text-amber-300"> &quot;x-api-secret: cs_live_••••&quot;</span>
+          {"\n  "}
+          <span className="text-sky-400">-d</span>
+          <span className="text-white/80">{" '{ "}</span>
+          <span className="text-violet-300">&quot;message&quot;</span>
+          <span className="text-white/80">: </span>
+          <span className="text-amber-300">&quot;What&apos;s our refund window?&quot;</span>
+          <span className="text-white/80">{" }'"}</span>
+        </code>
+        <code className="mt-4 block whitespace-pre text-white/40">
+          {"# → 200 OK\n"}
+          {"{\n"}
+          {"  "}
+          <span className="text-violet-300">&quot;result&quot;</span>
+          {": {\n"}
+          {"    "}
+          <span className="text-violet-300">&quot;answer&quot;</span>
+          {": "}
+          <span className="text-emerald-300">
+            &quot;Annual plans include a 30-day refund window.&quot;
+          </span>
+          {"\n  }\n}"}
+        </code>
+      </pre>
+    </div>
+  );
+}
+
 function SectionHeading({
   eyebrow,
   title,
@@ -347,6 +421,12 @@ export default function LandingPage() {
             </a>
             <a href="#ai-hub" className="transition-colors hover:text-foreground">
               AI Hub
+            </a>
+            <a
+              href="#developers"
+              className="transition-colors hover:text-foreground"
+            >
+              API
             </a>
             <a
               href="#how-it-works"
@@ -613,6 +693,52 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Developer API */}
+      <section id="developers" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <div className="grid items-center gap-12 lg:grid-cols-2">
+          <Reveal className="order-2 lg:order-1">
+            <CodeWindow />
+          </Reveal>
+          <Reveal delay={150} className="order-1 lg:order-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+              <TerminalIcon className="size-3.5" />
+              Developer API
+            </span>
+            <h2 className="font-heading mt-4 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+              Put Consect's brain in your own apps.
+            </h2>
+            <p className="mt-4 text-base text-muted-foreground text-pretty">
+              Generate an API key and ask your workspace anything from code. One
+              authenticated request returns an answer grounded in your AI Hub —
+              perfect for support bots, internal tools and automations.
+            </p>
+
+            <ul className="mt-8 space-y-4">
+              {API_POINTS.map(({ icon: Icon, title, body }) => (
+                <li key={title} className="flex gap-3">
+                  <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <Icon className="size-4" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium">{title}</p>
+                    <p className="text-sm text-muted-foreground">{body}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8">
+              <Button asChild variant="outline">
+                <Link href="/auth">
+                  Get your API key
+                  <ArrowRightIcon />
+                </Link>
+              </Button>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* How it works */}
       <section id="how-it-works" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <Reveal>
@@ -678,6 +804,9 @@ export default function LandingPage() {
             </a>
             <a href="#ai-hub" className="hover:text-foreground">
               AI Hub
+            </a>
+            <a href="#developers" className="hover:text-foreground">
+              API
             </a>
             <Link href="/auth" className="hover:text-foreground">
               Sign in

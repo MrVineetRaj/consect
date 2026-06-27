@@ -17,13 +17,43 @@ app = FastAPI()
 async def embed_document(data: EmbedDocumentRequest):
     print(f"Received request to embed document with ID: {data.id}")
 
-    # Pull the document down to the local embedding cache before processing.
-    document_path = await embedding_cache.fetch_document(
-        secure_url=data.secureURL,
-        public_id=data.publicId,
-    )
+    try:
+        # Pull the document down to the local embedding cache before processing.
+        document_path = await embedding_cache.fetch_document(
+            secure_url=data.secureURL,
+            public_id=data.publicId,
+        )
+    except Exception as e:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                "http://localhost:8080/api/webhook/embedding/status-update",
+                json={
+                    "pointIds": [],
+                    "resourceId": data.id,
+                    "status": "failed",
+                },
+            )
+            resp.raise_for_status()
+            print(f"Webhook responded: {resp.status_code}")
+        return {"message": "Failed to fetch document."}
+
+
     # Read the document and extract text
     text = readDocuments(data.type, document_path)
+
+    if(text == ""):
+         async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                "http://localhost:8080/api/webhook/embedding/status-update",
+                json={
+                    "pointIds": [],
+                    "resourceId": data.id,
+                    "status": "failed",
+                },
+            )
+            resp.raise_for_status()
+            print(f"Webhook responded: {resp.status_code}")
+    
 
     chunks = get_chunks(text)
     print(f"Document split into {len(chunks)} chunks.")

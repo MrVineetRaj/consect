@@ -206,8 +206,13 @@ class VectorDB {
         SearchRequest["filter"],
         undefined
       >;
-
-    return this.client.search(args.collection, request);
+    try {
+      const result = this.client.search(args.collection, request);
+      return result;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
   }
 
   async rankItems(args: { score: number[] }) {}

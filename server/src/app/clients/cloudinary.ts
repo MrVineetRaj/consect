@@ -22,8 +22,8 @@ const MIME_TO_EXT: Record<string, string> = {
 /** Pull the `<mime>` out of a `data:<mime>;base64,...` URI, if present. */
 function extensionFromDataUri(content: string): string | null {
   const match = /^data:([^;,]+)[;,]/i.exec(content.trim());
-  if (!match) return null;
-  return MIME_TO_EXT[match[1].toLowerCase()] ?? null;
+  if (match == null || match == undefined) return null;
+  return MIME_TO_EXT[match[1]!.toLowerCase()] ?? null;
 }
 
 /** Slugify a name into a safe, slash-free public-id segment. */
@@ -88,18 +88,21 @@ class CloudinaryClient {
     const withExt = ext ? `${segment}.${ext}` : segment;
     const publicId = args.folder ? `${args.folder}/${withExt}` : withExt;
 
-    const result: UploadApiResponse = await this.client.uploader.upload(source, {
-      upload_preset: env.CLOUDINARY_PRESET,
-      resource_type: args.resourceType ?? "raw",
-      public_id: publicId,
-      use_filename: false,
-      unique_filename: false,
-      // Also set the Media Library display folder for dynamic-folder presets.
-      ...(args.folder ? { asset_folder: args.folder } : {}),
-      ...(args.displayName
-        ? { display_name: args.displayName.replace(/\//g, "-") }
-        : {}),
-    });
+    const result: UploadApiResponse = await this.client.uploader.upload(
+      source,
+      {
+        upload_preset: env.CLOUDINARY_PRESET,
+        resource_type: args.resourceType ?? "raw",
+        public_id: publicId,
+        use_filename: false,
+        unique_filename: false,
+        // Also set the Media Library display folder for dynamic-folder presets.
+        ...(args.folder ? { asset_folder: args.folder } : {}),
+        ...(args.displayName
+          ? { display_name: args.displayName.replace(/\//g, "-") }
+          : {}),
+      },
+    );
 
     return { publicId: result.public_id, secureURL: result.secure_url };
   }

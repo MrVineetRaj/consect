@@ -17,6 +17,9 @@ declare global {
         organizationId: string | null | undefined;
         conversationId: string | null | undefined;
         userId: string | null | undefined;
+        // Populated by `apiKeyAuthMiddleware` for programmatic (API-key) routes.
+        apiKey?: string | null | undefined;
+        apiSecret?: string | null | undefined;
       };
     }
   }

@@ -36,11 +36,11 @@ class Controller {
       mentions: body.mentions.filter((men) => men != "consecto"),
     });
 
-    // todo : announce message to socket
     io.to("convo_" + ctx.conversationId).emit("new_message", {
       message: result,
     });
 
+    console.log(body.mentions)
     if (body.mentions.includes("consecto")) {
       invokeLLMForMessage({ ctx, body }).catch((e) => {
         return new HttpResponse({
