@@ -4,6 +4,7 @@ import { conversationMemberRepository } from "../../db/repository/conservation-m
 import { conversationRepository } from "../../db/repository/conversation.js";
 import { message } from "../../db/schema.js";
 import { ResponseCodes } from "../../types/codes.js";
+import { notifyUsersInBackground } from "../../workflow/notify.js";
 import type {
   CreateNewConversationPropType,
   DeleteMultipleSentInvitePropType,
@@ -77,6 +78,17 @@ class Controller {
       });
 
     // todo : send email if user not online
+
+    if (result) {
+      notifyUsersInBackground({
+        userIds: body.forUsers,
+        organizationId: ctx.organizationId,
+        type: "conversation_invite",
+        actorId: ctx.userId,
+        conversationId: ctx.conversationId,
+        data: { role: body.role },
+      });
+    }
 
     if (!result) {
       return new HttpResponse({

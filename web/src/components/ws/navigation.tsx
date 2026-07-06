@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { NotificationBadge } from "../activity/notification-badge";
 const SIDE_NAV = [
   {
     icon: HomeIcon,
@@ -64,6 +65,7 @@ export const Navigation = () => {
                 isActive ? "opacity-100 scale-100" : "opacity-0 scale-0",
               )}
             />
+            {nav.label === "Activity" && <NotificationBadge />}
             <nav.icon
               className={cn(
                 "size-5 transition-transform duration-200 ease-out",

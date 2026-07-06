@@ -35,6 +35,7 @@ class Controller {
       secureURL,
       status: "processing",
       embeddingIds: [],
+      uploadedBy: ctx.userId,
     });
 
     // Kick off embedding without blocking the response. The embedding service

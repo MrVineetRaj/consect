@@ -38,6 +38,14 @@ export const statusEnum = pgEnum("status_enum", [
 ]);
 
 export const roleEnum = pgEnum("role_enum", ["owner", "admin", "member"]);
+
+export const notificationTypeEnum = pgEnum("notification_type_enum", [
+  "mention",
+  "thread_reply",
+  "conversation_invite",
+  "ai_resource_ready",
+  "ai_resource_failed",
+]);
 // #region --- Better Auth Schema ---
 
 export const user = pgTable("user", {
@@ -295,11 +303,55 @@ export const aiHubResource = pgTable("ai_hub_resource", {
   secureURL: text("secure_url").notNull(),
   status: statusEnum("status").default("pending"),
   embeddingIds: text("embedding_ids").array(),
+  uploadedBy: text("uploaded_by").references(() => user.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+export const notification = pgTable(
+  "notification",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    type: notificationTypeEnum("type").notNull(),
+    actorId: text("actor_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    conversationId: text("conversation_id").references(() => conversation.id, {
+      onDelete: "cascade",
+    }),
+    messageId: text("message_id").references(() => message.id, {
+      onDelete: "cascade",
+    }),
+    resourceId: text("resource_id").references(() => aiHubResource.id, {
+      onDelete: "cascade",
+    }),
+    // Snapshot of whatever the feed needs to render (preview text, names)
+    // so rows stay meaningful even if the source is edited later.
+    data: jsonb("data").default({}),
+    readAt: timestamp("read_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("notification_userId_organizationId_idx").on(
+      table.userId,
+      table.organizationId,
+    ),
+  ],
+);
 
 export const apiKey = pgTable("api_key", {
   id: text("id").primaryKey(),
@@ -336,6 +388,12 @@ export const userRelations = relations(user, ({ many, one }) => ({
   }),
   receivedConversationInvitations: many(conversationInvitation, {
     relationName: "invitationRecipient",
+  }),
+  notifications: many(notification, {
+    relationName: "notificationRecipient",
+  }),
+  triggeredNotifications: many(notification, {
+    relationName: "notificationActor",
   }),
 }));
 
@@ -477,6 +535,35 @@ export const userPreferenceRelations = relations(userPreference, ({ one }) => ({
     references: [user.id],
   }),
 }));
+export const notificationRelations = relations(notification, ({ one }) => ({
+  user: one(user, {
+    fields: [notification.userId],
+    references: [user.id],
+    relationName: "notificationRecipient",
+  }),
+  actor: one(user, {
+    fields: [notification.actorId],
+    references: [user.id],
+    relationName: "notificationActor",
+  }),
+  organization: one(organization, {
+    fields: [notification.organizationId],
+    references: [organization.id],
+  }),
+  conversation: one(conversation, {
+    fields: [notification.conversationId],
+    references: [conversation.id],
+  }),
+  message: one(message, {
+    fields: [notification.messageId],
+    references: [message.id],
+  }),
+  resource: one(aiHubResource, {
+    fields: [notification.resourceId],
+    references: [aiHubResource.id],
+  }),
+}));
+
 export const apiKeyRelations = relations(apiKey, ({ one }) => ({
   user: one(user, {
     fields: [apiKey.userId],
