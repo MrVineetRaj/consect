@@ -1,4 +1,15 @@
-import { and, asc, desc, eq, gte, ilike, inArray, ne, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
 import { db } from "../connection.js";
 import { conversation, conversationMember, message, user } from "../schema.js";
@@ -109,6 +120,52 @@ class Repository {
         ),
       )
       .orderBy(asc(conversation.name));
+
+    return result.map((r) => ({
+      ...r.conversation,
+      isMember: !!r.membershipId,
+    }));
+  }
+
+  /**
+   * Channels matching a name search, for the workspace search bar: the
+   * user's own channels (any visibility) plus discoverable public/unlisted
+   * ones. Private channels the user isn't in stay hidden.
+   */
+  async searchChannels(args: {
+    organizationId: string;
+    userId: string;
+    query: string;
+    limit?: number;
+  }) {
+    const pattern = `%${args.query.trim()}%`;
+
+    const result = await db
+      .select({
+        conversation: conversation,
+        membershipId: conversationMember.id,
+      })
+      .from(conversation)
+      .leftJoin(
+        conversationMember,
+        and(
+          eq(conversationMember.conversationId, conversation.id),
+          eq(conversationMember.userId, args.userId),
+        ),
+      )
+      .where(
+        and(
+          eq(conversation.organizationId, args.organizationId),
+          eq(conversation.type, "channel"),
+          ilike(conversation.name, pattern),
+          or(
+            sql`${conversationMember.id} is not null`,
+            inArray(conversation.visibility, ["public", "unlisted"]),
+          ),
+        ),
+      )
+      .orderBy(asc(conversation.name))
+      .limit(args.limit ?? 15);
 
     return result.map((r) => ({
       ...r.conversation,

@@ -132,6 +132,7 @@ interface INotification {
     role?: string;
     resourceName?: string | null;
     responded?: "accepted" | "declined";
+    viaMention?: boolean;
   } | null;
   readAt: string | null;
   createdAt: Date;

@@ -4,9 +4,11 @@ import { conversationMemberRepository } from "../../db/repository/conservation-m
 import { conversationRepository } from "../../db/repository/conversation.js";
 import { message } from "../../db/schema.js";
 import { ResponseCodes } from "../../types/codes.js";
+import { messageRepository } from "../../db/repository/messages.js";
 import { notificationRepository } from "../../db/repository/notification.js";
 import { organizationRepository } from "../../db/repository/organization.js";
 import { notifyUsersInBackground } from "../../workflow/notify.js";
+import { postSystemMessageInBackground } from "../../workflow/system-message.js";
 import type {
   BrowseChannelsPropType,
   CreateNewConversationPropType,
@@ -18,7 +20,26 @@ import type {
   SendInvitePropType,
 } from "./schema.js";
 
+const escapeHtml = (value: string) =>
+  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 class Controller {
+  /** Announce a newly joined member inside the conversation. */
+  private async announceJoin(args: {
+    userId: string;
+    conversationId: string;
+    organizationId: string;
+  }) {
+    const joinedUser = await messageRepository.getUserById({
+      id: args.userId,
+    });
+    postSystemMessageInBackground({
+      conversationId: args.conversationId,
+      organizationId: args.organizationId,
+      content: `<p>${escapeHtml(joinedUser?.name ?? "Someone")} joined</p>`,
+    });
+  }
+
   async createNewConversation({ ctx, body }: CreateNewConversationPropType) {
     const memberIds = Array.from(new Set(body.memberIds)).filter(
       (id) => id !== ctx.userId,
@@ -273,6 +294,11 @@ class Controller {
         conversationId: channel.id,
         role: "member",
       });
+      await this.announceJoin({
+        userId: ctx.userId,
+        conversationId: channel.id,
+        organizationId: ctx.organizationId,
+      });
     }
 
     return new HttpResponse({
@@ -317,6 +343,11 @@ class Controller {
         userId: ctx.userId,
         conversationId: invitation.conversationId,
         role: invitation.role ?? "member",
+      });
+      await this.announceJoin({
+        userId: ctx.userId,
+        conversationId: invitation.conversationId,
+        organizationId: ctx.organizationId,
       });
     }
 

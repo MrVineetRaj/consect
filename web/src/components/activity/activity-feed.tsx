@@ -74,7 +74,9 @@ const headline = (notif: INotification) => {
     case "thread_reply":
       return `${actor} replied to your thread${where ? ` in ${where}` : ""}`;
     case "conversation_invite":
-      return `${actor} invited you to join ${where ?? "a conversation"}`;
+      return notif.data?.viaMention
+        ? `${actor} mentioned you in ${where ?? "a conversation"} — accept to join`
+        : `${actor} invited you to join ${where ?? "a conversation"}`;
     case "ai_resource_ready":
       return `"${notif.data?.resourceName ?? "A resource"}" is ready in the AI Hub`;
     case "ai_resource_failed":

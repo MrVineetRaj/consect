@@ -1,7 +1,7 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, ilike, inArray, or } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
 import { db } from "../connection.js";
-import { member, organization } from "../schema.js";
+import { member, organization, user } from "../schema.js";
 
 type OrganizationType = typeof organization.$inferSelect;
 
@@ -79,6 +79,36 @@ class Repository {
       );
 
     return result.map((r) => r.userId);
+  }
+
+  /** Workspace members whose name or email matches the query. */
+  async searchOrganizationMembers(args: {
+    organizationId: string;
+    query: string;
+    limit?: number;
+  }) {
+    const pattern = `%${args.query.trim()}%`;
+
+    const result = await db
+      .select({
+        userId: member.userId,
+        role: member.role,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+      })
+      .from(member)
+      .innerJoin(user, eq(user.id, member.userId))
+      .where(
+        and(
+          eq(member.organizationId, args.organizationId),
+          or(ilike(user.name, pattern), ilike(user.email, pattern)),
+        ),
+      )
+      .orderBy(asc(user.name))
+      .limit(args.limit ?? 15);
+
+    return result;
   }
 
   async getOrganizationBySlug(args: { slug: string }) {
