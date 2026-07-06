@@ -5,8 +5,8 @@ import { useOrganizationStore } from "@/store/organization-store";
 import { useUserPreferenceStore } from "@/store/user-preference-store";
 import { useUserStore } from "@/store/user-store";
 import React, { useEffect, useState } from "react";
-import { Search } from "lucide-react";
 import { toast } from "sonner";
+import { WorkspaceSearch } from "./workspace-search";
 import {
   Select,
   SelectContent,
@@ -88,14 +88,7 @@ export const CommandSlit = () => {
   return (
     <div className="w-full px-3 py-2 min-h-12 flex items-center gap-2 border-b border-border/60">
       <OrganizationSwitcher />
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-        <input
-          type="text"
-          placeholder="Search..."
-          className="w-full h-8 rounded-md bg-muted/50 pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:bg-muted transition-colors"
-        />
-      </div>
+      <WorkspaceSearch />
     </div>
   );
 };

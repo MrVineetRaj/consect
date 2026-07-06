@@ -11,8 +11,8 @@ import type {
   ListMessagesPropType,
   UpdateMessagePropType,
 } from "./schema.js";
-import { invokeLLMForMessage } from "./utils.js";
-import { notifyUsersInBackground } from "../../workflow/notify.js";
+import { fanOutMessageNotifications, invokeLLMForMessage } from "./utils.js";
+import logger from "../../lib/logger.js";
 
 class Controller {
   async newMessage({ ctx, body }: CreateNewMessagePropType) {
@@ -42,45 +42,13 @@ class Controller {
     });
 
     if (result) {
-      const mentionedUserIds = body.mentions.filter(
-        (men) => men !== "consecto",
+      // Mentions, auto-invites for non-member mentions, and thread-reply
+      // pings — all off the request path so sending stays fast.
+      fanOutMessageNotifications({ ctx, body, messageId: result.id }).catch(
+        (error) => {
+          logger.error("Message notification fan-out failed", { error });
+        },
       );
-      const preview = body.content.slice(0, 140);
-
-      notifyUsersInBackground({
-        userIds: mentionedUserIds,
-        organizationId: ctx.organizationId,
-        type: "mention",
-        actorId: ctx.userId,
-        conversationId: ctx.conversationId,
-        messageId: result.id,
-        data: { preview },
-      });
-
-      // Thread reply: ping the parent author unless they were already
-      // mentioned (avoids double-notifying for the same message).
-      if (body.parentMessageId) {
-        const parentMessage = await messageRepository.getMessageById({
-          id: body.parentMessageId,
-          organizationId: ctx.organizationId,
-          conversationId: ctx.conversationId,
-        });
-
-        if (
-          parentMessage &&
-          !mentionedUserIds.includes(parentMessage.senderId)
-        ) {
-          notifyUsersInBackground({
-            userIds: [parentMessage.senderId],
-            organizationId: ctx.organizationId,
-            type: "thread_reply",
-            actorId: ctx.userId,
-            conversationId: ctx.conversationId,
-            messageId: result.id,
-            data: { preview },
-          });
-        }
-      }
     }
 
     if (body.mentions.includes("consecto")) {

@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
 import { db } from "../connection.js";
 import { conversationMember } from "../schema.js";
@@ -17,6 +17,28 @@ class Repository {
       .returning();
 
     return newConversationMember;
+  }
+
+  async createMultipleConversationMembers(args: {
+    conversationId: string;
+    userIds: string[];
+    role: "admin" | "member";
+  }) {
+    if (args.userIds.length === 0) return [];
+
+    const newMembers = await db
+      .insert(conversationMember)
+      .values(
+        args.userIds.map((userId) => ({
+          id: generateBase64String(32),
+          userId,
+          conversationId: args.conversationId,
+          role: args.role,
+        })),
+      )
+      .returning();
+
+    return newMembers;
   }
 
   async getConversationMemberById(args: { id: string }) {
@@ -39,6 +61,26 @@ class Repository {
     });
 
     return result;
+  }
+
+  /** The subset of the given user ids that are members of the conversation. */
+  async filterConversationMemberUserIds(args: {
+    conversationId: string;
+    userIds: string[];
+  }) {
+    if (args.userIds.length === 0) return [];
+
+    const result = await db
+      .select({ userId: conversationMember.userId })
+      .from(conversationMember)
+      .where(
+        and(
+          eq(conversationMember.conversationId, args.conversationId),
+          inArray(conversationMember.userId, args.userIds),
+        ),
+      );
+
+    return result.map((r) => r.userId);
   }
 
   async getConversationMembersByConversationId(args: {

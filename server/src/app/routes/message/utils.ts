@@ -2,8 +2,120 @@ import { messageRepository } from "../../db/repository/messages.js";
 import { CONSECTO_BOT } from "../../lib/constants.js";
 import { type CreateNewMessagePropType } from "./schema.js";
 import { conversationRepository } from "../../db/repository/conversation.js";
+import { conversationInviteRepository } from "../../db/repository/conservation-invite.js";
+import { conversationMemberRepository } from "../../db/repository/conservation-member.js";
+import { organizationRepository } from "../../db/repository/organization.js";
+import { notifyUsersInBackground } from "../../workflow/notify.js";
 import io from "../../socket/socket-io.js";
 import { queryFromEmbedding } from "../../workflow/query-from-embedding.js";
+
+/**
+ * Post-send fan-out for a new message:
+ * - mentioned users who are already in the conversation get a `mention`
+ *   notification;
+ * - mentioned workspace members who are NOT in the conversation are invited
+ *   to it (channels and groups only) and notified about the invite instead —
+ *   a mention notification would point at a conversation they can't open;
+ * - a thread reply pings the parent author unless they were mentioned too.
+ *
+ * Runs after the message is persisted; callers should fire-and-forget it.
+ */
+export async function fanOutMessageNotifications({
+  ctx,
+  body,
+  messageId,
+}: CreateNewMessagePropType & { messageId: string }) {
+  const mentionedUserIds = Array.from(new Set(body.mentions)).filter(
+    (id) => id !== CONSECTO_BOT.id && id !== ctx.userId,
+  );
+  const preview = body.content.slice(0, 140);
+
+  // Only workspace members count — mentions arrive from the client as-is.
+  const orgMentioned =
+    await organizationRepository.filterOrganizationMemberUserIds({
+      organizationId: ctx.organizationId,
+      userIds: mentionedUserIds,
+    });
+
+  const conversationMemberIds =
+    await conversationMemberRepository.filterConversationMemberUserIds({
+      conversationId: ctx.conversationId,
+      userIds: orgMentioned,
+    });
+  const nonMembers = orgMentioned.filter(
+    (id) => !conversationMemberIds.includes(id),
+  );
+
+  notifyUsersInBackground({
+    userIds: conversationMemberIds,
+    organizationId: ctx.organizationId,
+    type: "mention",
+    actorId: ctx.userId,
+    conversationId: ctx.conversationId,
+    messageId,
+    data: { preview },
+  });
+
+  if (nonMembers.length > 0) {
+    const conversation = await conversationRepository.getConversationById({
+      id: ctx.conversationId,
+    });
+
+    // DMs can't gain members; only channels and groups auto-invite.
+    if (conversation?.type === "channel" || conversation?.type === "group") {
+      const alreadyInvited =
+        await conversationInviteRepository.filterAlreadyInvitedUserIds({
+          conversationId: ctx.conversationId,
+          userIds: nonMembers,
+        });
+      const toInvite = nonMembers.filter(
+        (id) => !alreadyInvited.includes(id),
+      );
+
+      if (toInvite.length > 0) {
+        await conversationInviteRepository.createMultipleConversationInvitation(
+          {
+            senderId: ctx.userId,
+            forUsers: toInvite,
+            conversationId: ctx.conversationId,
+            expiry: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000),
+            role: "member",
+          },
+        );
+        notifyUsersInBackground({
+          userIds: toInvite,
+          organizationId: ctx.organizationId,
+          type: "conversation_invite",
+          actorId: ctx.userId,
+          conversationId: ctx.conversationId,
+          data: { role: "member", viaMention: true },
+        });
+      }
+    }
+  }
+
+  // Thread reply: ping the parent author unless they were already covered
+  // by a mention (or wrote the reply themselves).
+  if (body.parentMessageId) {
+    const parentMessage = await messageRepository.getMessageById({
+      id: body.parentMessageId,
+      organizationId: ctx.organizationId,
+      conversationId: ctx.conversationId,
+    });
+
+    if (parentMessage && !orgMentioned.includes(parentMessage.senderId)) {
+      notifyUsersInBackground({
+        userIds: [parentMessage.senderId],
+        organizationId: ctx.organizationId,
+        type: "thread_reply",
+        actorId: ctx.userId,
+        conversationId: ctx.conversationId,
+        messageId,
+        data: { preview },
+      });
+    }
+  }
+}
 
 export async function invokeLLMForMessage({
   ctx,

@@ -6,6 +6,12 @@ export const CreateNewConversationSchema = z.object({
     name: z.string().nullish().default(null),
     type: z.enum(["group", "dm", "channel"]).default("dm"),
     description: z.string().nullish().default(null),
+    // dm: exactly one user (added directly, idempotent); group: added
+    // directly as members; channel: invited via the invitation flow.
+    memberIds: z.array(z.string().nonempty()).default([]),
+    // Only honoured for channels — groups are always private and DMs
+    // always unlisted.
+    visibility: z.enum(["public", "unlisted", "private"]).nullish(),
   }),
   ctx: z.object({
     organizationId: z.string(),
@@ -88,6 +94,66 @@ export const SendInviteHeadersSchema = z.object({
     description: "Users's current conversation",
   }),
 });
+// browse channels----
+export const BrowseChannelsInputSchema = z.object({
+  query: z.object({
+    q: z.string().optional(),
+  }),
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string().nonempty(),
+  }),
+});
+export type BrowseChannelsPropType = z.infer<typeof BrowseChannelsInputSchema>;
+
+export const BrowseChannelsHeadersSchema = z.object({
+  [HeaderKeys.organizationId]: z.string().meta({
+    description: "Organization to browse channels in.",
+  }),
+});
+// ---
+
+// join channel----
+export const JoinChannelInputSchema = z.object({
+  body: z.object({
+    conversationId: z.string().nonempty(),
+  }),
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string().nonempty(),
+  }),
+});
+export type JoinChannelPropType = z.infer<typeof JoinChannelInputSchema>;
+
+export const JoinChannelHeadersSchema = z.object({
+  [HeaderKeys.organizationId]: z.string().meta({
+    description: "Organization the channel belongs to.",
+  }),
+});
+// ---
+
+// respond to invite----
+export const RespondInviteInputSchema = z.object({
+  body: z.object({
+    // The invite is looked up by (recipient, conversation) — that pair is
+    // what notification rows carry, and a user has at most one open invite
+    // per conversation.
+    conversationId: z.string().nonempty(),
+  }),
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string().nonempty(),
+  }),
+});
+export type RespondInvitePropType = z.infer<typeof RespondInviteInputSchema>;
+
+export const RespondInviteHeadersSchema = z.object({
+  [HeaderKeys.organizationId]: z.string().meta({
+    description: "Organization the conversation belongs to.",
+  }),
+});
+// ---
+
 export const DeleteMultipleSentInviteInputSchema = z.object({
   body: z.object({
     invitationIds: z.array(z.string().nonempty()),

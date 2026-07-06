@@ -49,6 +49,10 @@ import {
   router as notificationRoutes,
   NOTIFICATION_BASE_PATH,
 } from "./routes/notification/routes.js";
+import {
+  router as searchRoutes,
+  SEARCH_BASE_PATH,
+} from "./routes/search/routes.js";
 import { logger } from "better-auth";
 
 export function createExpressApp(): Application {
@@ -77,6 +81,7 @@ export function createExpressApp(): Application {
   app.use(CONSECTO_API_BASE_PATH, consectoRoutes);
   app.use(WEBHOOK_BASE_PATH, webhookRoutes);
   app.use(NOTIFICATION_BASE_PATH, notificationRoutes);
+  app.use(SEARCH_BASE_PATH, searchRoutes);
 
   // Auto-generated API docs. The document is built from the Zod schemas
   // attached to each route via `createApiRouter`, so it stays in sync.

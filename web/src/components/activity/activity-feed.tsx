@@ -17,6 +17,8 @@ import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { useNotificationClient } from "@/hooks/use-notifications";
 import { useNotificationStore } from "@/store/notification-store";
+import { useConversationClient } from "@/hooks/use-conversations";
+import { toast } from "sonner";
 
 const TABS = [
   { key: "all", label: "All" },
@@ -72,7 +74,9 @@ const headline = (notif: INotification) => {
     case "thread_reply":
       return `${actor} replied to your thread${where ? ` in ${where}` : ""}`;
     case "conversation_invite":
-      return `${actor} invited you to join ${where ?? "a conversation"}`;
+      return notif.data?.viaMention
+        ? `${actor} mentioned you in ${where ?? "a conversation"} — accept to join`
+        : `${actor} invited you to join ${where ?? "a conversation"}`;
     case "ai_resource_ready":
       return `"${notif.data?.resourceName ?? "A resource"}" is ready in the AI Hub`;
     case "ai_resource_failed":
@@ -91,6 +95,8 @@ export const ActivityFeed = ({
 }) => {
   const router = useRouter();
   const { markRead, markAllRead } = useNotificationClient();
+  const { acceptInvite, declineInvite } = useConversationClient();
+  const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const { decrementUnreadCount, setUnreadCount } = useNotificationStore();
   const [notifications, setNotifications] = useState(initialNotifications);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
@@ -122,17 +128,72 @@ export const ActivityFeed = ({
     setUnreadCount(0);
   };
 
-  const handleOpen = async (notif: INotification) => {
-    if (!notif.readAt) {
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notif.id ? { ...n, readAt: new Date().toISOString() } : n,
-        ),
-      );
-      decrementUnreadCount();
-      // Fire-and-forget; the optimistic update above already reflects it.
-      markRead({ token, organizationId, ids: [notif.id] }).catch(() => {});
+  const markReadLocally = (notif: INotification) => {
+    if (notif.readAt) return;
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n.id === notif.id ? { ...n, readAt: new Date().toISOString() } : n,
+      ),
+    );
+    decrementUnreadCount();
+    markRead({ token, organizationId, ids: [notif.id] }).catch(() => {});
+  };
+
+  const setRespondedLocally = (
+    notif: INotification,
+    responded: "accepted" | "declined",
+  ) => {
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n.id === notif.id ? { ...n, data: { ...n.data, responded } } : n,
+      ),
+    );
+  };
+
+  const handleInviteResponse = async (
+    notif: INotification,
+    action: "accept" | "decline",
+  ) => {
+    if (!notif.conversationId || respondingTo) return;
+    setRespondingTo(notif.id);
+    try {
+      if (action === "accept") {
+        await acceptInvite({
+          token,
+          organizationId,
+          conversationId: notif.conversationId,
+        });
+        markReadLocally(notif);
+        setRespondedLocally(notif, "accepted");
+        toast.success("Invitation accepted");
+        router.push(`/ws/home/${notif.conversationId}`);
+        router.refresh();
+      } else {
+        await declineInvite({
+          token,
+          organizationId,
+          conversationId: notif.conversationId,
+        });
+        markReadLocally(notif);
+        setRespondedLocally(notif, "declined");
+        toast.success("Invitation declined");
+      }
+    } catch {
+      // Most likely the invitation was already handled or expired.
+      markReadLocally(notif);
+      setRespondedLocally(notif, "declined");
+      toast.error("This invitation is no longer available");
+    } finally {
+      setRespondingTo(null);
     }
+  };
+
+  const handleOpen = async (notif: INotification) => {
+    markReadLocally(notif);
+
+    // Invites are answered via their Accept/Decline buttons — the user isn't
+    // a member yet, so there is nowhere to navigate.
+    if (notif.type === "conversation_invite") return;
 
     if (notif.type.startsWith("ai_resource")) {
       router.push("/ws/ai-hub");
@@ -203,12 +264,17 @@ export const ActivityFeed = ({
             : null;
           const isSystem = notif.type.startsWith("ai_resource");
 
+          const isInvite = notif.type === "conversation_invite";
+
           return (
-            <button
+            <div
               key={notif.id}
+              role="button"
+              tabIndex={0}
               onClick={() => handleOpen(notif)}
+              onKeyDown={(e) => e.key === "Enter" && handleOpen(notif)}
               className={cn(
-                "group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
+                "group flex w-full cursor-pointer items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
                 "hover:bg-muted/70",
                 isUnread && "bg-primary/5 ring-1 ring-primary/10",
               )}
@@ -251,12 +317,46 @@ export const ActivityFeed = ({
                     {preview}
                   </p>
                 )}
+                {isInvite &&
+                  (notif.data?.responded ? (
+                    <span className="mt-1 text-xs font-medium text-muted-foreground">
+                      {notif.data.responded === "accepted"
+                        ? "Accepted"
+                        : "Declined"}
+                    </span>
+                  ) : (
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        className="h-7 px-3 text-xs"
+                        disabled={respondingTo === notif.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleInviteResponse(notif, "accept");
+                        }}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-3 text-xs"
+                        disabled={respondingTo === notif.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleInviteResponse(notif, "decline");
+                        }}
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  ))}
               </div>
 
               {isUnread && (
                 <span className="mt-2 size-2 shrink-0 rounded-full bg-primary" />
               )}
-            </button>
+            </div>
           );
         })}
       </div>

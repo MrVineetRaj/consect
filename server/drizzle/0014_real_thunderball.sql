@@ -1,0 +1,2 @@
+CREATE TYPE "public"."conversation_visibility_enum" AS ENUM('public', 'unlisted', 'private');--> statement-breakpoint
+ALTER TABLE "conversation" ADD COLUMN "visibility" "conversation_visibility_enum" DEFAULT 'public' NOT NULL;

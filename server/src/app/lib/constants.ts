@@ -13,3 +13,16 @@ export const CONSECTO_BOT = {
   emailVerified: true,
   image: null,
 } as const;
+
+/**
+ * Sender of system-generated messages ("X joined", …). A bare `user` row —
+ * never a member of any organization or conversation — existing only so
+ * `message.sender_id` has something to reference.
+ */
+export const SYSTEM_BOT = {
+  id: "system_bot",
+  name: "system",
+  email: "bot@system.local",
+  emailVerified: true,
+  image: null,
+} as const;

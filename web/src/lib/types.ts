@@ -30,12 +30,15 @@ interface IOrganization {
   role: OrganizationRole;
 }
 
+type ConversationVisibility = "public" | "unlisted" | "private";
+
 interface IConversation {
   id: string;
   name: string | null;
   organizationId: string;
   type: "group" | "dm" | "channel" | null;
   description: string | null;
+  visibility?: ConversationVisibility;
   image?: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -128,6 +131,8 @@ interface INotification {
     preview?: string;
     role?: string;
     resourceName?: string | null;
+    responded?: "accepted" | "declined";
+    viaMention?: boolean;
   } | null;
   readAt: string | null;
   createdAt: Date;

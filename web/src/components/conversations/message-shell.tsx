@@ -51,6 +51,21 @@ const MessageBox = ({ msg, isOwn }: { msg: IMessage; isOwn: boolean }) => {
     minute: "2-digit",
   });
 
+  // System-generated messages ("X joined") render as a centered pill, not a
+  // chat bubble.
+  if (msg.senderId === "system_bot") {
+    return (
+      <div className="flex w-full justify-center py-0.5">
+        <span className="rounded-full bg-muted px-3 py-0.5 text-[11px] text-muted-foreground">
+          {msg.content
+            .replace(/<[^>]*>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()}
+        </span>
+      </div>
+    );
+  }
+
   const isAI = msg.senderId == "consecto";
 
   return (

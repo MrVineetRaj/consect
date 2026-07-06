@@ -52,6 +52,41 @@ class Repository {
     return result;
   }
 
+  async getInvitationForUserInConversation(args: {
+    userId: string;
+    conversationId: string;
+  }) {
+    const result = await db.query.conversationInvitation.findFirst({
+      where: (fields, { eq, and }) =>
+        and(
+          eq(fields.forUser, args.userId),
+          eq(fields.conversationId, args.conversationId),
+        ),
+    });
+
+    return result;
+  }
+
+  /** User ids among the given ones that already have an invite to the conversation. */
+  async filterAlreadyInvitedUserIds(args: {
+    conversationId: string;
+    userIds: string[];
+  }) {
+    if (args.userIds.length === 0) return [];
+
+    const result = await db
+      .select({ forUser: conversationInvitation.forUser })
+      .from(conversationInvitation)
+      .where(
+        and(
+          eq(conversationInvitation.conversationId, args.conversationId),
+          inArray(conversationInvitation.forUser, args.userIds),
+        ),
+      );
+
+    return result.map((r) => r.forUser);
+  }
+
   async getUserReceivedInvitations(args: { userId: string }) {
     const result = await db
       .select()
