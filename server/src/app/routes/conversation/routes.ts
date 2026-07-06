@@ -13,6 +13,12 @@ import {
   DeleteMultipleSentInviteHeadersSchema,
   ListConversationMemberInputSchema,
   ListConversationMemberHeadersSchema,
+  RespondInviteInputSchema,
+  RespondInviteHeadersSchema,
+  BrowseChannelsInputSchema,
+  BrowseChannelsHeadersSchema,
+  JoinChannelInputSchema,
+  JoinChannelHeadersSchema,
 } from "./schema.js";
 
 export const CONVERSATION_BASE_PATH = "/api/v1/conversation";
@@ -39,6 +45,26 @@ api.get("/recent", authMiddleware, {
   tags: ["Conversation"],
 });
 
+api.get("/browse", authMiddleware, {
+  schema: BrowseChannelsInputSchema,
+  response: CreateNewConversationResponseSchema,
+  headers: BrowseChannelsHeadersSchema,
+  auth: true,
+  handler: controller.browseChannels.bind(controller),
+  summary: "Browse joinable channels (public, or unlisted via search)",
+  tags: ["Conversation"],
+});
+
+api.post("/join", authMiddleware, {
+  schema: JoinChannelInputSchema,
+  response: CreateNewConversationResponseSchema,
+  headers: JoinChannelHeadersSchema,
+  auth: true,
+  handler: controller.joinChannel.bind(controller),
+  summary: "Join a public or unlisted channel",
+  tags: ["Conversation"],
+});
+
 api.get("/members", authMiddleware, {
   schema: ListConversationMemberInputSchema,
   response: CreateNewConversationResponseSchema,
@@ -55,6 +81,26 @@ api.post("/invite", authMiddleware, {
   auth: true,
   handler: controller.sendInvite.bind(controller),
   summary: "Send Invitation to multiple users",
+  tags: ["Conversation"],
+});
+
+api.post("/invite/accept", authMiddleware, {
+  schema: RespondInviteInputSchema,
+  response: CreateNewConversationResponseSchema,
+  headers: RespondInviteHeadersSchema,
+  auth: true,
+  handler: controller.acceptInvite.bind(controller),
+  summary: "Accept a conversation invitation",
+  tags: ["Conversation"],
+});
+
+api.post("/invite/decline", authMiddleware, {
+  schema: RespondInviteInputSchema,
+  response: CreateNewConversationResponseSchema,
+  headers: RespondInviteHeadersSchema,
+  auth: true,
+  handler: controller.declineInvite.bind(controller),
+  summary: "Decline a conversation invitation",
   tags: ["Conversation"],
 });
 

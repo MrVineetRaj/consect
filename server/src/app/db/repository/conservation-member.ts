@@ -19,6 +19,28 @@ class Repository {
     return newConversationMember;
   }
 
+  async createMultipleConversationMembers(args: {
+    conversationId: string;
+    userIds: string[];
+    role: "admin" | "member";
+  }) {
+    if (args.userIds.length === 0) return [];
+
+    const newMembers = await db
+      .insert(conversationMember)
+      .values(
+        args.userIds.map((userId) => ({
+          id: generateBase64String(32),
+          userId,
+          conversationId: args.conversationId,
+          role: args.role,
+        })),
+      )
+      .returning();
+
+    return newMembers;
+  }
+
   async getConversationMemberById(args: { id: string }) {
     const result = await db.query.conversationMember.findFirst({
       where: (fields, { eq }) => eq(fields.id, args.id),

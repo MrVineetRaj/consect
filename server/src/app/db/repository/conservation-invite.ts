@@ -52,6 +52,21 @@ class Repository {
     return result;
   }
 
+  async getInvitationForUserInConversation(args: {
+    userId: string;
+    conversationId: string;
+  }) {
+    const result = await db.query.conversationInvitation.findFirst({
+      where: (fields, { eq, and }) =>
+        and(
+          eq(fields.forUser, args.userId),
+          eq(fields.conversationId, args.conversationId),
+        ),
+    });
+
+    return result;
+  }
+
   async getUserReceivedInvitations(args: { userId: string }) {
     const result = await db
       .select()

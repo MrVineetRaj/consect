@@ -39,6 +39,11 @@ export const statusEnum = pgEnum("status_enum", [
 
 export const roleEnum = pgEnum("role_enum", ["owner", "admin", "member"]);
 
+export const conversationVisibilityEnum = pgEnum(
+  "conversation_visibility_enum",
+  ["public", "unlisted", "private"],
+);
+
 export const notificationTypeEnum = pgEnum("notification_type_enum", [
   "mention",
   "thread_reply",
@@ -215,6 +220,12 @@ export const conversation = pgTable("conversation", {
     .references(() => organization.id, { onDelete: "cascade" }),
   type: conversationTypeEnum("type"),
   description: text("description"),
+  // public: listed in the org's channel browser; unlisted: joinable but only
+  // discoverable by name search; private: invite-only. Groups are always
+  // private and DMs always unlisted — only channels choose.
+  visibility: conversationVisibilityEnum("visibility")
+    .default("public")
+    .notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .$onUpdate(() => /* @__PURE__ */ new Date())

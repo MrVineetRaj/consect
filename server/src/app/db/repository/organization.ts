@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
 import { db } from "../connection.js";
 import { member, organization } from "../schema.js";
@@ -59,6 +59,26 @@ class Repository {
 
       return { ...newOrganization, role: "owner" as const };
     });
+  }
+
+  /** The subset of the given user ids that are members of the organization. */
+  async filterOrganizationMemberUserIds(args: {
+    organizationId: string;
+    userIds: string[];
+  }) {
+    if (args.userIds.length === 0) return [];
+
+    const result = await db
+      .select({ userId: member.userId })
+      .from(member)
+      .where(
+        and(
+          eq(member.organizationId, args.organizationId),
+          inArray(member.userId, args.userIds),
+        ),
+      );
+
+    return result.map((r) => r.userId);
   }
 
   async getOrganizationBySlug(args: { slug: string }) {
