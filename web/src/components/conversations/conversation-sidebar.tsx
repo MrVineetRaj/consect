@@ -2,11 +2,16 @@
 import { ConversationAvatar } from "@/components/shared/conversation-avatar";
 import { cn } from "@/lib/utils";
 import { useOrganizationStore } from "@/store/organization-store";
-import { HashIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { CompassIcon, HashIcon, PlusIcon, SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
+import {
+  BrowseChannelsDialog,
+  CreateChannelDialog,
+  NewDmDialog,
+} from "./create-conversation-dialogs";
 
 type Channel = { id: string; name: string | null };
 
@@ -18,7 +23,17 @@ type DmConversation = {
   type: "group" | "dm" | "channel" | null;
 };
 
-const SectionHeader = ({ title, count }: { title: string; count: number }) => (
+const SectionHeader = ({
+  title,
+  count,
+  onAdd,
+  onBrowse,
+}: {
+  title: string;
+  count: number;
+  onAdd: () => void;
+  onBrowse?: () => void;
+}) => (
   <div className="flex items-center justify-between px-2 pb-1">
     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
       {title}
@@ -29,9 +44,20 @@ const SectionHeader = ({ title, count }: { title: string; count: number }) => (
           {count}
         </span>
       )}
+      {onBrowse && (
+        <button
+          type="button"
+          aria-label={`Browse ${title.toLowerCase()}`}
+          onClick={onBrowse}
+          className="grid size-5 place-items-center rounded-md text-muted-foreground/70 shadow-none transition-colors hover:bg-background hover:text-foreground"
+        >
+          <CompassIcon className="size-3.5" />
+        </button>
+      )}
       <button
         type="button"
         aria-label={`Add ${title.toLowerCase()}`}
+        onClick={onAdd}
         className="grid size-5 place-items-center rounded-md text-muted-foreground/70 shadow-none transition-colors hover:bg-background hover:text-foreground"
       >
         <PlusIcon className="size-3.5" />
@@ -60,6 +86,9 @@ export const ConversationSidebar = ({
   const { orgPresence } = useOrganizationStore();
   const pathname = usePathname();
   const [query, setQuery] = useState("");
+  const [channelDialogOpen, setChannelDialogOpen] = useState(false);
+  const [browseDialogOpen, setBrowseDialogOpen] = useState(false);
+  const [dmDialogOpen, setDmDialogOpen] = useState(false);
 
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -109,7 +138,12 @@ export const ConversationSidebar = ({
       <nav className="flex-1 min-h-0 space-y-5 overflow-y-auto px-2 pb-4">
         {!isDMPage && (
           <div>
-            <SectionHeader title="Channels" count={filteredChannels.length} />
+            <SectionHeader
+              title="Channels"
+              count={filteredChannels.length}
+              onAdd={() => setChannelDialogOpen(true)}
+              onBrowse={() => setBrowseDialogOpen(true)}
+            />
             {filteredChannels.length === 0 ? (
               <EmptyHint>
                 {normalizedQuery ? "No matching channels" : "No channels yet"}
@@ -135,7 +169,11 @@ export const ConversationSidebar = ({
           </div>
         )}
         <div>
-          <SectionHeader title="Direct Messages" count={filteredDms.length} />
+          <SectionHeader
+            title="Direct Messages"
+            count={filteredDms.length}
+            onAdd={() => setDmDialogOpen(true)}
+          />
           {filteredDms.length === 0 ? (
             <EmptyHint>
               {normalizedQuery
@@ -169,6 +207,16 @@ export const ConversationSidebar = ({
           )}
         </div>
       </nav>
+
+      <CreateChannelDialog
+        open={channelDialogOpen}
+        onOpenChange={setChannelDialogOpen}
+      />
+      <BrowseChannelsDialog
+        open={browseDialogOpen}
+        onOpenChange={setBrowseDialogOpen}
+      />
+      <NewDmDialog open={dmDialogOpen} onOpenChange={setDmDialogOpen} />
     </aside>
   );
 };

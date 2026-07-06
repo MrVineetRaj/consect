@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, ne, sql } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
 import { db } from "../connection.js";
 import { conversation, conversationMember, message, user } from "../schema.js";
@@ -40,6 +40,80 @@ class Repository {
     });
 
     return result;
+  }
+
+  /**
+   * The 1:1 DM between two users in an org, if it exists. DMs always have
+   * exactly two members, so matching both users is sufficient.
+   */
+  async getExistingDMBetweenUsers(args: {
+    organizationId: string;
+    userIds: [string, string];
+  }) {
+    const result = await db
+      .select({ conversation: conversation })
+      .from(conversation)
+      .innerJoin(
+        conversationMember,
+        eq(conversationMember.conversationId, conversation.id),
+      )
+      .where(
+        and(
+          eq(conversation.organizationId, args.organizationId),
+          eq(conversation.type, "dm"),
+          inArray(conversationMember.userId, args.userIds),
+        ),
+      )
+      .groupBy(conversation.id)
+      .having(eq(sql`count(distinct ${conversationMember.userId})`, 2))
+      .limit(1);
+
+    return result[0]?.conversation;
+  }
+
+  /**
+   * Channels a user can discover: public ones are always listed; unlisted
+   * ones only surface when the search query matches their name. Private
+   * channels never appear — invitation is the only way in.
+   */
+  async browseChannels(args: {
+    organizationId: string;
+    userId: string;
+    query?: string | undefined;
+  }) {
+    const q = args.query?.trim();
+
+    const result = await db
+      .select({
+        conversation: conversation,
+        membershipId: conversationMember.id,
+      })
+      .from(conversation)
+      .leftJoin(
+        conversationMember,
+        and(
+          eq(conversationMember.conversationId, conversation.id),
+          eq(conversationMember.userId, args.userId),
+        ),
+      )
+      .where(
+        and(
+          eq(conversation.organizationId, args.organizationId),
+          eq(conversation.type, "channel"),
+          q
+            ? and(
+                inArray(conversation.visibility, ["public", "unlisted"]),
+                ilike(conversation.name, `%${q}%`),
+              )
+            : eq(conversation.visibility, "public"),
+        ),
+      )
+      .orderBy(asc(conversation.name));
+
+    return result.map((r) => ({
+      ...r.conversation,
+      isMember: !!r.membershipId,
+    }));
   }
 
   async getUserChannels(args: { userId: string; organizationId: string }) {

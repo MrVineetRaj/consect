@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
 import { db } from "../connection.js";
 import { notification } from "../schema.js";
@@ -108,6 +108,34 @@ class Repository {
       .returning();
 
     return updated;
+  }
+
+  /**
+   * Stamp the user's invite notification(s) for a conversation with how they
+   * responded, so the feed can stop offering Accept/Decline across reloads.
+   */
+  async markInviteNotificationsResponded(args: {
+    userId: string;
+    conversationId: string;
+    response: "accepted" | "declined";
+  }) {
+    await db
+      .update(notification)
+      .set({
+        readAt: new Date(),
+        data: sql`coalesce(${notification.data}, '{}'::jsonb) || ${JSON.stringify(
+          { responded: args.response },
+        )}::jsonb`,
+      })
+      .where(
+        and(
+          eq(notification.userId, args.userId),
+          eq(notification.conversationId, args.conversationId),
+          eq(notification.type, "conversation_invite"),
+        ),
+      );
+
+    return true;
   }
 
   async markAllAsRead(args: { userId: string; organizationId: string }) {
