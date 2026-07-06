@@ -107,3 +107,31 @@ interface IMessage {
   content: string;
   sender: IUser;
 }
+
+type NotificationKind =
+  | "mention"
+  | "thread_reply"
+  | "conversation_invite"
+  | "ai_resource_ready"
+  | "ai_resource_failed";
+
+interface INotification {
+  id: string;
+  userId: string;
+  organizationId: string;
+  type: NotificationKind;
+  actorId: string | null;
+  conversationId: string | null;
+  messageId: string | null;
+  resourceId: string | null;
+  data: {
+    preview?: string;
+    role?: string;
+    resourceName?: string | null;
+  } | null;
+  readAt: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  actor: IUser | null;
+  conversation: IConversation | null;
+}

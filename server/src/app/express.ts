@@ -45,6 +45,10 @@ import {
   router as webhookRoutes,
   WEBHOOK_BASE_PATH,
 } from "./routes/webhook/routes.js";
+import {
+  router as notificationRoutes,
+  NOTIFICATION_BASE_PATH,
+} from "./routes/notification/routes.js";
 import { logger } from "better-auth";
 
 export function createExpressApp(): Application {
@@ -72,6 +76,7 @@ export function createExpressApp(): Application {
   app.use(API_KEY_BASE_PATH, apiKeyRoutes);
   app.use(CONSECTO_API_BASE_PATH, consectoRoutes);
   app.use(WEBHOOK_BASE_PATH, webhookRoutes);
+  app.use(NOTIFICATION_BASE_PATH, notificationRoutes);
 
   // Auto-generated API docs. The document is built from the Zod schemas
   // attached to each route via `createApiRouter`, so it stays in sync.

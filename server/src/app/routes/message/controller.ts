@@ -12,6 +12,7 @@ import type {
   UpdateMessagePropType,
 } from "./schema.js";
 import { invokeLLMForMessage } from "./utils.js";
+import { notifyUsersInBackground } from "../../workflow/notify.js";
 
 class Controller {
   async newMessage({ ctx, body }: CreateNewMessagePropType) {
@@ -40,7 +41,48 @@ class Controller {
       message: result,
     });
 
-    console.log(body.mentions)
+    if (result) {
+      const mentionedUserIds = body.mentions.filter(
+        (men) => men !== "consecto",
+      );
+      const preview = body.content.slice(0, 140);
+
+      notifyUsersInBackground({
+        userIds: mentionedUserIds,
+        organizationId: ctx.organizationId,
+        type: "mention",
+        actorId: ctx.userId,
+        conversationId: ctx.conversationId,
+        messageId: result.id,
+        data: { preview },
+      });
+
+      // Thread reply: ping the parent author unless they were already
+      // mentioned (avoids double-notifying for the same message).
+      if (body.parentMessageId) {
+        const parentMessage = await messageRepository.getMessageById({
+          id: body.parentMessageId,
+          organizationId: ctx.organizationId,
+          conversationId: ctx.conversationId,
+        });
+
+        if (
+          parentMessage &&
+          !mentionedUserIds.includes(parentMessage.senderId)
+        ) {
+          notifyUsersInBackground({
+            userIds: [parentMessage.senderId],
+            organizationId: ctx.organizationId,
+            type: "thread_reply",
+            actorId: ctx.userId,
+            conversationId: ctx.conversationId,
+            messageId: result.id,
+            data: { preview },
+          });
+        }
+      }
+    }
+
     if (body.mentions.includes("consecto")) {
       invokeLLMForMessage({ ctx, body }).catch((e) => {
         return new HttpResponse({

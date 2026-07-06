@@ -41,5 +41,5 @@
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "include": ["src","drizzle.config.ts"],
+  "include": ["src","drizzle.config.js"],
 }
