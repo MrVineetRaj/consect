@@ -1,5 +1,6 @@
 import z from "zod";
 import { HeaderKeys } from "../../lib/constants.js";
+import { AccessConfigInputSchema } from "../../types/access-config.js";
 
 export const ResourceTypeSchema = z.enum(["doc", "pdf", "url", "text", "md"]);
 
@@ -19,6 +20,7 @@ export const CreateResourceInputSchema = z.object({
     organizationId: z.string().nonempty(),
     userId: z.string().nonempty(),
   }),
+  accessConfig: AccessConfigInputSchema,
 });
 export type CreateResourcePropType = z.infer<typeof CreateResourceInputSchema>;
 
@@ -50,6 +52,7 @@ export const DeleteResourceInputSchema = z.object({
     organizationId: z.string().nonempty(),
     userId: z.string(),
   }),
+  accessConfig: AccessConfigInputSchema,
 });
 export type DeleteResourcePropType = z.infer<typeof DeleteResourceInputSchema>;
 
@@ -71,6 +74,7 @@ export const UpdateResourceMetaInputSchema = z.object({
     organizationId: z.string().nonempty(),
     userId: z.string(),
   }),
+  accessConfig: AccessConfigInputSchema,
 });
 export type UpdateResourceMetaPropType = z.infer<
   typeof UpdateResourceMetaInputSchema

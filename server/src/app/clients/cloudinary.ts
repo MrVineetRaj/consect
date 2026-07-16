@@ -107,6 +107,17 @@ class CloudinaryClient {
     return { publicId: result.public_id, secureURL: result.secure_url };
   }
 
+  /** Delivery URL for a stored public id (we upload everything as `raw`). */
+  getSecureUrl(args: {
+    publicId: string;
+    resourceType?: CloudinaryResourceKind;
+  }) {
+    return this.client.url(args.publicId, {
+      resource_type: args.resourceType ?? "raw",
+      secure: true,
+    });
+  }
+
   /** Remove a previously uploaded resource by its public id. */
   async deleteResource(args: {
     publicId: string;

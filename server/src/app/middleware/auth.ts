@@ -87,6 +87,15 @@ export async function authMiddleware(
       ...(orgConfig.length > 0 ? (orgConfig[0]?.config ?? {}) : {}),
     };
 
+    // Workspace owners/admins trump channel-level roles and overrides: they
+    // get full channel capabilities in every conversation of their org.
+    if (
+      organizationMembership?.role === "owner" ||
+      organizationMembership?.role === "admin"
+    ) {
+      accessConfig.channel = getChannelAccessConfig("owner");
+    }
+
     res.accessConfig = accessConfig;
   }
 

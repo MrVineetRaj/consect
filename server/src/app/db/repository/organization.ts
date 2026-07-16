@@ -81,6 +81,64 @@ class Repository {
     return result.map((r) => r.userId);
   }
 
+  /** Every member of the workspace, with their user profile. */
+  async getOrganizationMembersWithUsers(args: { organizationId: string }) {
+    const result = await db.query.member.findMany({
+      where: (fields, { eq }) => eq(fields.organizationId, args.organizationId),
+      with: {
+        user: true,
+      },
+    });
+
+    return result;
+  }
+
+  async getOrganizationMemberById(args: { id: string }) {
+    const result = await db.query.member.findFirst({
+      where: (fields, { eq }) => eq(fields.id, args.id),
+    });
+
+    return result;
+  }
+
+  async updateOrganizationMemberRole(args: {
+    id: string;
+    newRole: "admin" | "member";
+  }) {
+    const [updated] = await db
+      .update(member)
+      .set({ role: args.newRole })
+      .where(eq(member.id, args.id))
+      .returning();
+
+    return updated;
+  }
+
+  async deleteOrganizationMember(args: { id: string }) {
+    await db.delete(member).where(eq(member.id, args.id));
+    return true;
+  }
+
+  /** Workspace roles for the given user ids. */
+  async getOrganizationMemberRoles(args: {
+    organizationId: string;
+    userIds: string[];
+  }) {
+    if (args.userIds.length === 0) return [];
+
+    const result = await db
+      .select({ userId: member.userId, role: member.role })
+      .from(member)
+      .where(
+        and(
+          eq(member.organizationId, args.organizationId),
+          inArray(member.userId, args.userIds),
+        ),
+      );
+
+    return result;
+  }
+
   /** Workspace members whose name or email matches the query. */
   async searchOrganizationMembers(args: {
     organizationId: string;

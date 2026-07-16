@@ -1,5 +1,6 @@
 import z from "zod";
 import { HeaderKeys } from "../../lib/constants.js";
+import { AccessConfigInputSchema } from "../../types/access-config.js";
 
 export const CreateNewConversationSchema = z.object({
   body: z.object({
@@ -17,6 +18,7 @@ export const CreateNewConversationSchema = z.object({
     organizationId: z.string(),
     userId: z.string(),
   }),
+  accessConfig: AccessConfigInputSchema,
 });
 
 export const CreateNewConversationHeadersSchema = z.object({
@@ -82,6 +84,7 @@ export const SendInviteInputSchema = z.object({
     userId: z.string().nonempty(),
     conversationId: z.string().nonempty(),
   }),
+  accessConfig: AccessConfigInputSchema,
 });
 
 export type SendInvitePropType = z.infer<typeof SendInviteInputSchema>;
@@ -152,6 +155,106 @@ export const RespondInviteHeadersSchema = z.object({
     description: "Organization the conversation belongs to.",
   }),
 });
+// ---
+
+// conversation details / files / member management ----
+
+const AccessConfigSchema = AccessConfigInputSchema;
+
+const ConversationScopedHeadersSchema = z.object({
+  [HeaderKeys.organizationId]: z.string().meta({
+    description: "Organization the conversation belongs to.",
+  }),
+  [HeaderKeys.conversationId]: z.string().meta({
+    description: "Conversation being operated on.",
+  }),
+});
+
+export const GetConversationDetailsInputSchema = z.object({
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string().nonempty(),
+    conversationId: z.string().nonempty(),
+  }),
+});
+export type GetConversationDetailsPropType = z.infer<
+  typeof GetConversationDetailsInputSchema
+>;
+export const GetConversationDetailsHeadersSchema =
+  ConversationScopedHeadersSchema;
+
+export const ListConversationFilesInputSchema = z.object({
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string().nonempty(),
+    conversationId: z.string().nonempty(),
+  }),
+});
+export type ListConversationFilesPropType = z.infer<
+  typeof ListConversationFilesInputSchema
+>;
+export const ListConversationFilesHeadersSchema =
+  ConversationScopedHeadersSchema;
+
+export const UpdateMemberRoleInputSchema = z.object({
+  body: z.object({
+    // conversation_member.id of the row being changed.
+    memberId: z.string().nonempty(),
+    role: z.enum(["admin", "member"]),
+  }),
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string().nonempty(),
+    conversationId: z.string().nonempty(),
+  }),
+  accessConfig: AccessConfigSchema,
+});
+export type UpdateMemberRolePropType = z.infer<
+  typeof UpdateMemberRoleInputSchema
+>;
+export const UpdateMemberRoleHeadersSchema = ConversationScopedHeadersSchema;
+
+export const UpdateMemberAccessInputSchema = z.object({
+  body: z.object({
+    userId: z.string().nonempty(),
+    // Partial per-capability overrides, merged over the role defaults.
+    config: z
+      .object({
+        removeMember: z.boolean().optional(),
+        inviteMember: z.boolean().optional(),
+        changeMemberConfig: z.boolean().optional(),
+        changeMemberRole: z.boolean().optional(),
+      })
+      .refine((c) => Object.keys(c).length > 0, {
+        message: "config must set at least one capability",
+      }),
+  }),
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string().nonempty(),
+    conversationId: z.string().nonempty(),
+  }),
+  accessConfig: AccessConfigSchema,
+});
+export type UpdateMemberAccessPropType = z.infer<
+  typeof UpdateMemberAccessInputSchema
+>;
+export const UpdateMemberAccessHeadersSchema = ConversationScopedHeadersSchema;
+
+export const RemoveMemberInputSchema = z.object({
+  body: z.object({
+    // conversation_member.id of the row being removed.
+    memberId: z.string().nonempty(),
+  }),
+  ctx: z.object({
+    organizationId: z.string().nonempty(),
+    userId: z.string().nonempty(),
+    conversationId: z.string().nonempty(),
+  }),
+  accessConfig: AccessConfigSchema,
+});
+export type RemoveMemberPropType = z.infer<typeof RemoveMemberInputSchema>;
+export const RemoveMemberHeadersSchema = ConversationScopedHeadersSchema;
 // ---
 
 export const DeleteMultipleSentInviteInputSchema = z.object({

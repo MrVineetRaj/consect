@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
 import { db } from "../connection.js";
-import { conversationMember } from "../schema.js";
+import { conversation, conversationMember } from "../schema.js";
 
 type ConversationMemberType = typeof conversationMember.$inferSelect;
 class Repository {
@@ -107,6 +107,27 @@ class Repository {
       .returning();
 
     return updatedConversationMember;
+  }
+
+  /** Drop a user from every conversation of one workspace (org removal). */
+  async deleteUserMembershipsInOrganization(args: {
+    userId: string;
+    organizationId: string;
+  }) {
+    const orgConversationIds = db
+      .select({ id: conversation.id })
+      .from(conversation)
+      .where(eq(conversation.organizationId, args.organizationId));
+
+    await db
+      .delete(conversationMember)
+      .where(
+        and(
+          eq(conversationMember.userId, args.userId),
+          inArray(conversationMember.conversationId, orgConversationIds),
+        ),
+      );
+    return true;
   }
 
   async deleteConversationMember(args: { id: string }) {
