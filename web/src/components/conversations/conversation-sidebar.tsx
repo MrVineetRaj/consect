@@ -5,15 +5,16 @@ import { useOrganizationStore } from "@/store/organization-store";
 import { CompassIcon, HashIcon, PlusIcon, SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { socket } from "@/lib/socket-io";
 import {
   BrowseChannelsDialog,
   CreateChannelDialog,
   NewDmDialog,
 } from "./create-conversation-dialogs";
 
-type Channel = { id: string; name: string | null };
+type Channel = { id: string; name: string | null; unreadCount?: number };
 
 type DmConversation = {
   id: string;
@@ -21,7 +22,15 @@ type DmConversation = {
   image?: string | null;
   members: ConversationMember[];
   type: "group" | "dm" | "channel" | null;
+  unreadCount?: number;
 };
+
+const UnreadBadge = ({ count }: { count: number }) =>
+  count > 0 ? (
+    <span className="ml-auto shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-primary-foreground">
+      {count > 99 ? "99+" : count}
+    </span>
+  ) : null;
 
 const SectionHeader = ({
   title,
@@ -92,6 +101,47 @@ export const ConversationSidebar = ({
 
   const normalizedQuery = query.trim().toLowerCase();
 
+  // Server-provided counts seed the badges; socket activity keeps them live.
+  const initialCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const c of channels) counts[c.id] = c.unreadCount ?? 0;
+    for (const c of dmAndGroups) counts[c.id] = c.unreadCount ?? 0;
+    return counts;
+  }, [channels, dmAndGroups]);
+  const [unreadCounts, setUnreadCounts] = useState(initialCounts);
+  useEffect(() => setUnreadCounts(initialCounts), [initialCounts]);
+
+  // The socket handler reads the pathname through a ref so it can stay
+  // subscribed across navigations.
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
+
+  useEffect(() => {
+    const handleActivity = (res: { conversationId: string }) => {
+      // The open conversation is being read right now — no badge for it.
+      if (pathnameRef.current.includes(res.conversationId)) return;
+      setUnreadCounts((prev) => ({
+        ...prev,
+        [res.conversationId]: (prev[res.conversationId] ?? 0) + 1,
+      }));
+    };
+    socket.on("conversation_activity", handleActivity);
+    return () => {
+      socket.off("conversation_activity", handleActivity);
+    };
+  }, []);
+
+  // Opening a conversation clears its badge (the shell marks it read).
+  useEffect(() => {
+    setUnreadCounts((prev) => {
+      const activeId = Object.keys(prev).find(
+        (id) => prev[id] && pathname.includes(id),
+      );
+      if (!activeId) return prev;
+      return { ...prev, [activeId]: 0 };
+    });
+  }, [pathname]);
+
   const filteredChannels = useMemo(
     () =>
       normalizedQuery
@@ -151,6 +201,7 @@ export const ConversationSidebar = ({
             ) : (
               filteredChannels.map((channel) => {
                 const isActive = pathname.includes(channel.id);
+                const unread = isActive ? 0 : (unreadCounts[channel.id] ?? 0);
                 return (
                   <Link
                     key={channel.id}
@@ -159,9 +210,15 @@ export const ConversationSidebar = ({
                     className={itemClass(isActive)}
                   >
                     <HashIcon className="size-4 shrink-0 opacity-70" />
-                    <span className="truncate">
+                    <span
+                      className={cn(
+                        "truncate",
+                        unread > 0 && "font-semibold text-foreground",
+                      )}
+                    >
                       {channel.name ?? "Untitled"}
                     </span>
+                    <UnreadBadge count={unread} />
                   </Link>
                 );
               })
@@ -183,6 +240,9 @@ export const ConversationSidebar = ({
           ) : (
             filteredDms.map((conversation) => {
               const isActive = pathname.includes(conversation.id);
+              const unread = isActive
+                ? 0
+                : (unreadCounts[conversation.id] ?? 0);
               const isOnline =
                 conversation.type == "group"
                   ? false
@@ -200,7 +260,15 @@ export const ConversationSidebar = ({
                     members={conversation.members}
                     isOnline={isOnline}
                   />
-                  <span className="truncate">{dmLabel(conversation)}</span>
+                  <span
+                    className={cn(
+                      "truncate",
+                      unread > 0 && "font-semibold text-foreground",
+                    )}
+                  >
+                    {dmLabel(conversation)}
+                  </span>
+                  <UnreadBadge count={unread} />
                 </Link>
               );
             })

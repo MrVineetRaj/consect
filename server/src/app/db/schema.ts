@@ -242,6 +242,9 @@ export const conversationMember = pgTable("conversation_member", {
       onDelete: "cascade",
     }),
   role: roleEnum().default("member"),
+  // Everything sent after this instant counts as unread for the member.
+  // Defaults to join time so newcomers don't see the whole history as unread.
+  lastReadAt: timestamp("last_read_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .$onUpdate(() => /* @__PURE__ */ new Date())

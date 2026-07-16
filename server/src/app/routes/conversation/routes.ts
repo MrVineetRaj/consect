@@ -19,6 +19,8 @@ import {
   BrowseChannelsHeadersSchema,
   JoinChannelInputSchema,
   JoinChannelHeadersSchema,
+  MarkConversationReadInputSchema,
+  MarkConversationReadHeadersSchema,
   GetConversationDetailsInputSchema,
   GetConversationDetailsHeadersSchema,
   ListConversationFilesInputSchema,
@@ -82,6 +84,15 @@ api.post("/join", authMiddleware, {
   auth: true,
   handler: controller.joinChannel.bind(controller),
   summary: "Join a public or unlisted channel",
+  tags: ["Conversation"],
+});
+
+api.post("/read", authMiddleware, {
+  schema: MarkConversationReadInputSchema,
+  headers: MarkConversationReadHeadersSchema,
+  auth: true,
+  handler: controller.markConversationRead.bind(controller),
+  summary: "Mark a conversation as read up to now",
   tags: ["Conversation"],
 });
 

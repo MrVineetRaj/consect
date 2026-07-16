@@ -40,6 +40,8 @@ interface IConversation {
   description: string | null;
   visibility?: ConversationVisibility;
   image?: string | null;
+  /** Messages from others since the viewer last read this conversation. */
+  unreadCount?: number;
   createdAt: Date;
   updatedAt: Date;
 }

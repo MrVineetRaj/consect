@@ -209,6 +209,35 @@ export function useConversationClient() {
     return res.data as { message: string; code: number };
   }
 
+  /** Reset the viewer's unread count for a conversation. */
+  async function markConversationRead({
+    token,
+    organizationId,
+    conversationId,
+  }: {
+    token: string;
+    organizationId: string;
+    conversationId: string;
+  }) {
+    const res = await axiosClient.post(
+      "/conversation/read",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "X-organization-id": organizationId,
+          "X-conversation-id": conversationId,
+        },
+      },
+    );
+
+    return res.data as {
+      message: string;
+      code: number;
+      result?: { lastReadAt: string };
+    };
+  }
+
   async function getConversationDetails({
     token,
     organizationId,
@@ -352,6 +381,7 @@ export function useConversationClient() {
     joinChannel,
     acceptInvite,
     declineInvite,
+    markConversationRead,
     getConversationDetails,
     listConversationFiles,
     updateMemberRole,

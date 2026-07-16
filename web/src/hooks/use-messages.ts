@@ -5,12 +5,21 @@ export function useMessageClient() {
     token,
     conversationId,
     organizationId,
+    before,
+    limit,
   }: {
     token: string;
     organizationId: string;
     conversationId: string;
+    /** Message id cursor — fetches the page older than this message. */
+    before?: string;
+    limit?: number;
   }) {
     const res = await axiosClient.get("/message", {
+      params: {
+        ...(before ? { before } : {}),
+        ...(limit ? { limit } : {}),
+      },
       headers: {
         Authorization: `Bearer ${token}`,
         "X-organization-id": organizationId,
@@ -21,7 +30,11 @@ export function useMessageClient() {
     return res.data as {
       message: string;
       code: number;
-      result: IMessage[];
+      result: {
+        messages: IMessage[];
+        nextCursor: string | null;
+        hasMore: boolean;
+      };
     };
   }
 

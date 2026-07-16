@@ -44,7 +44,14 @@ export const MessageResponseSchema = z.object({
 export const MessageListResponseSchema = z.object({
   code: z.number(),
   message: z.string(),
-  result: z.array(MessageSchema),
+  result: z.object({
+    messages: z.array(MessageSchema),
+    nextCursor: z.string().nullable().meta({
+      description:
+        "Pass as `before` to fetch the next (older) page. Null when exhausted.",
+    }),
+    hasMore: z.boolean(),
+  }),
 });
 
 export type CreateNewMessagePropType = z.infer<
@@ -53,6 +60,13 @@ export type CreateNewMessagePropType = z.infer<
 
 // list messages----
 export const ListMessagesInputSchema = z.object({
+  query: z.object({
+    before: z
+      .string()
+      .optional()
+      .meta({ description: "Message id cursor — return messages older than this." }),
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+  }),
   ctx: z.object({
     conversationId: z.string().nonempty(),
     organizationId: z.string(),

@@ -32,7 +32,7 @@ const ConversationId = async ({
   }
 
   const organizationId = preference?.organizationId;
-  const messages = organizationId
+  const messagePage = organizationId
     ? (
         await listMessages({
           token,
@@ -40,7 +40,7 @@ const ConversationId = async ({
           organizationId,
         })
       ).result
-    : [];
+    : { messages: [], nextCursor: null, hasMore: false };
 
   // Non-members (e.g. an invite not yet accepted) just don't get a header.
   const details = organizationId
@@ -65,7 +65,9 @@ const ConversationId = async ({
         )}
         <div className="flex-1 min-h-0">
           <MessageShell
-            initMessages={messages}
+            initMessages={messagePage.messages}
+            initNextCursor={messagePage.nextCursor}
+            initHasMore={messagePage.hasMore}
             conversationId={conversation_id}
             organizationId={organizationId}
           />

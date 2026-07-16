@@ -1,7 +1,13 @@
 "use client";
 import { icons } from "@/lib/assets";
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Avatar } from "../ui/avatar";
 import { Label } from "../ui/label";
 import { TiptapTextArea, type TiptapHandle } from "../shared/tiptap/textarea";
@@ -11,6 +17,7 @@ import { Spinner } from "../ui/spinner";
 import { toast } from "sonner";
 import { useUserStore } from "@/store/user-store";
 import { useMessageClient } from "@/hooks/use-messages";
+import { useConversationClient } from "@/hooks/use-conversations";
 import { cn } from "@/lib/utils";
 import { socket } from "@/lib/socket-io";
 import Link from "next/link";
@@ -137,38 +144,139 @@ const MessageBox = ({ msg, isOwn }: { msg: IMessage; isOwn: boolean }) => {
 };
 export const MessageShell = ({
   initMessages,
+  initNextCursor = null,
+  initHasMore = false,
   conversationId,
   organizationId,
 }: {
   initMessages: IMessage[];
+  initNextCursor?: string | null;
+  initHasMore?: boolean;
   conversationId: string;
   organizationId?: string | null;
 }) => {
-  const [messages, setMessages] = useState<IMessage[]>([]);
+  const [messages, setMessages] = useState<IMessage[]>(initMessages);
+  const [nextCursor, setNextCursor] = useState(initNextCursor);
+  const [hasMore, setHasMore] = useState(initHasMore);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const [sending, setSending] = useState(false);
-  const focusRef = useRef<HTMLSpanElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<TiptapHandle>(null);
+  // How the next messages-change should position the viewport: stay pinned to
+  // the bottom (new message) or compensate for content prepended on top.
+  const stickToBottomRef = useRef(true);
+  const prependStateRef = useRef<{ height: number; top: number } | null>(null);
 
   const { token, user } = useUserStore();
-  const { sendMessage } = useMessageClient();
+  const { sendMessage, listMessages } = useMessageClient();
+  const { markConversationRead } = useConversationClient();
 
   useEffect(() => {
     setMessages(initMessages);
-  }, [initMessages]);
+    setNextCursor(initNextCursor);
+    setHasMore(initHasMore);
+    stickToBottomRef.current = true;
+  }, [initMessages, initNextCursor, initHasMore]);
 
-  useEffect(() => {
-    focusRef.current?.scrollIntoView();
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (prependStateRef.current) {
+      el.scrollTop =
+        el.scrollHeight - prependStateRef.current.height +
+        prependStateRef.current.top;
+      prependStateRef.current = null;
+    } else if (stickToBottomRef.current) {
+      el.scrollTop = el.scrollHeight;
+    }
   }, [messages]);
+
+  const isNearBottom = () => {
+    const el = scrollRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+  };
+
+  const markRead = useCallback(() => {
+    if (!token || !organizationId) return;
+    markConversationRead({ token, organizationId, conversationId }).catch(
+      () => {},
+    );
+    // markConversationRead is recreated per render; the inputs below are what
+    // actually change the call.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, organizationId, conversationId]);
+
+  // Viewing a conversation reads it — on open and on every incoming message.
+  useEffect(() => {
+    markRead();
+  }, [markRead]);
 
   useEffect(() => {
     socket.emit("join_conversation", {
       conversationId: conversationId,
     });
 
-    socket.on("new_message", (res: { message: IMessage }) => {
-      setMessages((prev) => [...prev, { ...res.message }]);
-    });
-  }, []);
+    const handleNewMessage = (res: { message: IMessage }) => {
+      // The socket stays in every room visited this session, so drop events
+      // meant for other conversations.
+      if (res.message.conversationId !== conversationId) return;
+      // Own messages always snap to the bottom; others only if the viewer is
+      // already there (don't yank someone reading history).
+      stickToBottomRef.current =
+        res.message.senderId === user?.id || isNearBottom();
+      setMessages((prev) =>
+        prev.some((m) => m.id === res.message.id)
+          ? prev
+          : [...prev, { ...res.message }],
+      );
+      if (document.visibilityState === "visible") markRead();
+    };
+
+    socket.on("new_message", handleNewMessage);
+    return () => {
+      socket.off("new_message", handleNewMessage);
+    };
+  }, [conversationId, user?.id, markRead]);
+
+  const loadOlder = useCallback(async () => {
+    if (!hasMore || !nextCursor || loadingOlder || !token || !organizationId)
+      return;
+    setLoadingOlder(true);
+    try {
+      const { result } = await listMessages({
+        token,
+        conversationId,
+        organizationId,
+        before: nextCursor,
+      });
+      const el = scrollRef.current;
+      if (el)
+        prependStateRef.current = { height: el.scrollHeight, top: el.scrollTop };
+      stickToBottomRef.current = false;
+      setMessages((prev) => [...result.messages, ...prev]);
+      setNextCursor(result.nextCursor);
+      setHasMore(result.hasMore);
+    } catch {
+      toast.error("Failed to load older messages");
+    } finally {
+      setLoadingOlder(false);
+    }
+    // listMessages is recreated per render but only closes over the client.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMore, nextCursor, loadingOlder, token, organizationId, conversationId]);
+
+  // Fetch the previous page whenever the viewport nears the top of history.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const maybeLoadOlder = () => {
+      if (el.scrollTop < 200) loadOlder();
+    };
+    el.addEventListener("scroll", maybeLoadOlder, { passive: true });
+    return () => el.removeEventListener("scroll", maybeLoadOlder);
+  }, [loadOlder]);
 
   async function handleSend() {
     // Empty check on plain text, but send the rich HTML as the body.
@@ -198,7 +306,15 @@ export const MessageShell = ({
 
   return (
     <div className="h-full flex flex-col ">
-      <div className="flex-1 flex flex-col gap-3 p-2 items-start min-h-0 overflow-scroll">
+      <div
+        ref={scrollRef}
+        className="flex-1 flex flex-col gap-3 p-2 items-start min-h-0 overflow-scroll"
+      >
+        {loadingOlder && (
+          <div className="flex w-full justify-center py-1">
+            <Spinner className="size-4" />
+          </div>
+        )}
         {messages.map((msg, i) => {
           const prev = messages[i - 1];
           const showDivider =
@@ -214,7 +330,6 @@ export const MessageShell = ({
             </React.Fragment>
           );
         })}
-        <span ref={focusRef}></span>
       </div>
 
       <div className="p-3 pt-0">
