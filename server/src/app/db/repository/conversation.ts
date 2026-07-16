@@ -269,18 +269,56 @@ class Repository {
     return finalResult;
   }
 
+  /**
+   * Every group and DM the user belongs to, regardless of when the last
+   * message was sent (unlike the "recent" variant above). Conversations with
+   * no messages yet are included too, ordered by their creation time.
+   */
   async getUserGroupsAndDMs(args: { userId: string; organizationId: string }) {
     const result = await db
       .select({
         conversation: conversation,
-        lastMessageAt: sql<Date>`max(${message.createdAt})`,
+        lastMessageAt: sql<Date>`coalesce(max(${message.createdAt}), ${conversation.createdAt})`,
+        // Same aliased correlated subquery as in getUserRecentGroupsAndDMs:
+        // the outer conversationMember join is filtered to the current user.
+        members: sql<
+          Array<{
+            id: string;
+            userId: string;
+            role: string | null;
+            name: string;
+            email: string;
+            image: string | null;
+          }>
+        >`coalesce(
+          (
+            select json_agg(member)
+            from (
+              select json_build_object(
+                'id', cm.id,
+                'userId', cm.user_id,
+                'role', cm.role,
+                'name', u.name,
+                'email', u.email,
+                'image', u.image
+              ) as member
+              from ${conversationMember} as cm
+              inner join ${user} as u on u.id = cm.user_id
+              where cm.conversation_id = ${conversation.id}
+                and cm.user_id <> ${args.userId}
+              order by cm.created_at asc
+              limit 4
+            ) as sliced
+          ),
+          '[]'
+        )`,
       })
       .from(conversation)
       .innerJoin(
         conversationMember,
         eq(conversationMember.conversationId, conversation.id),
       )
-      .innerJoin(message, eq(message.conversationId, conversation.id))
+      .leftJoin(message, eq(message.conversationId, conversation.id))
       .where(
         and(
           eq(conversationMember.userId, args.userId),
@@ -289,9 +327,17 @@ class Repository {
         ),
       )
       .groupBy(conversation.id)
-      .orderBy(desc(sql`max(${message.createdAt})`));
+      .orderBy(
+        desc(
+          sql`coalesce(max(${message.createdAt}), ${conversation.createdAt})`,
+        ),
+      );
 
-    const finalResult = result.map((r) => r.conversation);
+    const finalResult = result.map((r) => ({
+      ...r.conversation,
+      lastMessageAt: r.lastMessageAt,
+      members: r.members,
+    }));
 
     return finalResult;
   }

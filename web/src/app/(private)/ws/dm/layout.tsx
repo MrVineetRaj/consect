@@ -20,13 +20,14 @@ const DirectMessageLayout = async ({
   const { getUserPreference } = usePreferenceClient();
   const { result: preference } = await getUserPreference(token);
 
-  const { listRecentConversations } = useConversationClient();
-  // const {} = useW
+  const { listGroupsAndDMs } = useConversationClient();
 
   const organizationId = preference?.organizationId;
+  // The DM page lists every group/DM the user belongs to — /recent's
+  // last-7-days cutoff only makes sense for the home sidebar.
   const conversations = organizationId
-    ? (await listRecentConversations({ token, organizationId })).result
-    : { channels: [], dmAndGroups: [] };
+    ? (await listGroupsAndDMs({ token, organizationId })).result
+    : { dmAndGroups: [] };
 
   return (
     <div className="flex-1 min-h-0 flex">

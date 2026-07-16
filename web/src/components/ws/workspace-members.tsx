@@ -32,6 +32,7 @@ import {
   Trash2Icon,
   UsersIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -275,7 +276,12 @@ export const WorkspaceMembersView = ({
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">
-                        {member.name}
+                        <Link
+                          href={`/ws/members/${member.userId}`}
+                          className="hover:underline"
+                        >
+                          {member.name}
+                        </Link>
                         {isSelf && (
                           <span className="ml-1.5 text-xs text-muted-foreground">
                             (you)
@@ -363,7 +369,12 @@ export const WorkspaceMembersView = ({
                               </AvatarFallback>
                             </Avatar>
                             <span className="truncate text-sm">
-                              {member.name}
+                              <Link
+                                href={`/ws/members/${member.userId}`}
+                                className="hover:underline"
+                              >
+                                {member.name}
+                              </Link>
                               {isSelf && (
                                 <span className="ml-1 text-xs text-muted-foreground">
                                   (you)

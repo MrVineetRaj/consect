@@ -34,6 +34,39 @@ export function useConversationClient() {
     };
   }
 
+  /** Every group and DM (no recency cutoff) — backs the DM page sidebar. */
+  async function listGroupsAndDMs({
+    token,
+    organizationId,
+  }: {
+    token: string;
+    organizationId: string;
+  }) {
+    const res = await axiosClient.get("/conversation/dms", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-organization-id": organizationId,
+      },
+    });
+
+    return res.data as {
+      message: string;
+      code: number;
+      result: {
+        dmAndGroups: (IConversation & {
+          members: {
+            id: string;
+            userId: string;
+            role: string | null;
+            name: string;
+            email: string;
+            image: string | null;
+          }[];
+        })[];
+      };
+    };
+  }
+
   async function createConversation({
     token,
     organizationId,
@@ -313,6 +346,7 @@ export function useConversationClient() {
 
   return {
     listRecentConversations,
+    listGroupsAndDMs,
     createConversation,
     browseChannels,
     joinChannel,

@@ -251,7 +251,12 @@ export const ConversationDetailsView = ({
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">
-                    {member.name}
+                    <Link
+                      href={`/ws/members/${member.userId}`}
+                      className="hover:underline"
+                    >
+                      {member.name}
+                    </Link>
                     {member.userId === user?.id && (
                       <span className="ml-1.5 text-xs text-muted-foreground">
                         (you)
@@ -298,7 +303,14 @@ export const ConversationDetailsView = ({
                       {fileName(file.publicId)}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      Shared by {file.sender.name} · {formatDate(file.createdAt)}
+                      Shared by{" "}
+                      <Link
+                        href={`/ws/members/${file.sender.id}`}
+                        className="hover:underline"
+                      >
+                        {file.sender.name}
+                      </Link>{" "}
+                      · {formatDate(file.createdAt)}
                     </p>
                   </div>
                   <Button variant="ghost" size="icon-sm" asChild aria-label="Open file">
@@ -363,7 +375,12 @@ export const ConversationDetailsView = ({
                               </AvatarFallback>
                             </Avatar>
                             <span className="truncate text-sm">
-                              {member.name}
+                              <Link
+                                href={`/ws/members/${member.userId}`}
+                                className="hover:underline"
+                              >
+                                {member.name}
+                              </Link>
                               {isSelf && (
                                 <span className="ml-1 text-xs text-muted-foreground">
                                   (you)

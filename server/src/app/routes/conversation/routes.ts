@@ -55,6 +55,16 @@ api.get("/recent", authMiddleware, {
   tags: ["Conversation"],
 });
 
+api.get("/dms", authMiddleware, {
+  schema: ListRecentConversationsInputSchema,
+  response: CreateNewConversationResponseSchema,
+  headers: ListRecentConversationsHeadersSchema,
+  auth: true,
+  handler: controller.listGroupsAndDMs.bind(controller),
+  summary: "All groups and DMs of the user (no recency cutoff)",
+  tags: ["Conversation"],
+});
+
 api.get("/browse", authMiddleware, {
   schema: BrowseChannelsInputSchema,
   response: CreateNewConversationResponseSchema,

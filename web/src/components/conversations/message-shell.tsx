@@ -13,6 +13,7 @@ import { useUserStore } from "@/store/user-store";
 import { useMessageClient } from "@/hooks/use-messages";
 import { cn } from "@/lib/utils";
 import { socket } from "@/lib/socket-io";
+import Link from "next/link";
 
 /** Midnight timestamp for the given date — used to compare calendar days. */
 const startOfDay = (date: Date) => {
@@ -96,11 +97,19 @@ const MessageBox = ({ msg, isOwn }: { msg: IMessage; isOwn: boolean }) => {
         )}
       >
         <div className="flex items-center gap-2 px-1">
-          {!isOwn && (
-            <Label className="text-xs font-semibold text-primary">
-              {msg.sender.name}
-            </Label>
-          )}
+          {!isOwn &&
+            (isAI ? (
+              <Label className="text-xs font-semibold text-primary">
+                {msg.sender.name}
+              </Label>
+            ) : (
+              <Link
+                href={`/ws/members/${msg.senderId}`}
+                className="text-xs font-semibold text-primary hover:underline"
+              >
+                {msg.sender.name}
+              </Link>
+            ))}
           <span className="text-[10px] text-muted-foreground">
             {isAI && <StarsIcon className="size-3 text-primary"/>}
           </span>

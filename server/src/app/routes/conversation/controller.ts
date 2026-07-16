@@ -194,6 +194,23 @@ class Controller {
     });
   }
 
+  /**
+   * Every group and DM the user belongs to — no recency cutoff, unlike
+   * /recent. Backs the DM page sidebar.
+   */
+  async listGroupsAndDMs({ ctx }: ListRecentConversationsPropType) {
+    const dmAndGroups = await conversationRepository.getUserGroupsAndDMs({
+      userId: ctx.userId,
+      organizationId: ctx.organizationId,
+    });
+
+    return new HttpResponse({
+      code: ResponseCodes.SUCCESS,
+      message: "Fetched all groups and DMs",
+      result: { dmAndGroups },
+    });
+  }
+
   async listConversationMember({ ctx }: ListConversationMemberPropType) {
     const result =
       await conversationMemberRepository.getConversationMembersByConversationId(
