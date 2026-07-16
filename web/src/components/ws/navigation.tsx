@@ -7,6 +7,7 @@ import {
   HomeIcon,
   MessageSquareIcon,
   StarsIcon,
+  UsersIcon,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,11 @@ const SIDE_NAV = [
     icon: MessageSquareIcon,
     label: "DM",
     href: "/ws/dm",
+  },
+  {
+    icon: UsersIcon,
+    label: "Members",
+    href: "/ws/members",
   },
   {
     icon: BellIcon,

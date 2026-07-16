@@ -98,6 +98,78 @@ interface ConversationMember {
   image: string | null;
 }
 
+type ChannelAccessKey =
+  | "removeMember"
+  | "inviteMember"
+  | "changeMemberConfig"
+  | "changeMemberRole";
+
+type ChannelAccess = Record<ChannelAccessKey, boolean>;
+
+type OrgAccessKey =
+  | "removeMember"
+  | "inviteMember"
+  | "changeMemberConfig"
+  | "changeMemberRole"
+  | "aiHubWrite"
+  | "createChannel";
+
+type OrgAccess = Record<OrgAccessKey, boolean>;
+
+interface IWorkspaceMemberDetail {
+  memberId: string;
+  userId: string;
+  role: OrganizationRole;
+  name: string;
+  email: string;
+  image: string | null;
+  joinedAt: Date;
+  /** Role defaults merged with stored overrides — what the member can do. */
+  access: OrgAccess;
+  /** Only the explicitly stored per-member overrides. */
+  overrides: Partial<OrgAccess>;
+}
+
+interface IWorkspaceMembers {
+  members: IWorkspaceMemberDetail[];
+  my?: IWorkspaceMemberDetail;
+}
+
+interface IConversationMemberDetail {
+  memberId: string;
+  userId: string;
+  role: "owner" | "admin" | "member" | null;
+  /** Workspace role — owners/admins get full channel access regardless. */
+  orgRole: OrganizationRole | null;
+  name: string;
+  email: string;
+  image: string | null;
+  joinedAt: Date;
+  /** Role defaults merged with stored overrides — what the member can do. */
+  access: ChannelAccess;
+  /** Only the explicitly stored per-member overrides. */
+  overrides: Partial<ChannelAccess>;
+}
+
+interface IConversationDetails {
+  conversation: IConversation;
+  members: IConversationMemberDetail[];
+  my?: IConversationMemberDetail;
+}
+
+interface IConversationFile {
+  id: string;
+  publicId: string;
+  messageId: string | null;
+  createdAt: Date;
+  url: string;
+  sender: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
+}
+
 interface IMessage {
   id: string;
   createdAt: Date;

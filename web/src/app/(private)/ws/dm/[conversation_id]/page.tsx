@@ -1,5 +1,7 @@
+import { ConversationHeader } from "@/components/conversations/conversation-header";
 import { MessageShell } from "@/components/conversations/message-shell";
 import { OrganizationModel } from "@/components/ws/organizations-model";
+import { useConversationClient } from "@/hooks/use-conversations";
 import { useMessageClient } from "@/hooks/use-messages";
 import { usePreferenceClient } from "@/hooks/use-preference";
 import { useAuthServer } from "@/lib/auth-server";
@@ -14,6 +16,7 @@ const DmConversationPage = async ({
 
   const { getServerSession } = useAuthServer();
   const { listMessages } = useMessageClient();
+  const { getConversationDetails } = useConversationClient();
   const session = await getServerSession();
   const token = session?.session.token;
   if (!token) {
@@ -39,16 +42,34 @@ const DmConversationPage = async ({
       ).result
     : [];
 
+  const details = organizationId
+    ? await getConversationDetails({
+        token,
+        organizationId,
+        conversationId: conversation_id,
+      })
+        .then((res) => res.result)
+        .catch(() => null)
+    : null;
+
   return (
     <main className="flex h-full w-full">
-      <div className="flex-5 min-h-0 h-full">
-        <MessageShell
-          initMessages={messages}
-          conversationId={conversation_id}
-          organizationId={organizationId}
-        />
+      <div className="flex-5 min-h-0 h-full flex flex-col">
+        {details && (
+          <ConversationHeader
+            details={details}
+            detailsHref={`/ws/dm/${conversation_id}/details`}
+            currentUserId={session?.user.id}
+          />
+        )}
+        <div className="flex-1 min-h-0">
+          <MessageShell
+            initMessages={messages}
+            conversationId={conversation_id}
+            organizationId={organizationId}
+          />
+        </div>
       </div>
-      {/* <div className="flex-2 bg-muted rounded-l-2xl hidden md:block" /> */}
       <OrganizationModel />
     </main>
   );

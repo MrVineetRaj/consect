@@ -1,7 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
 import { db } from "../connection.js";
-import { file } from "../schema.js";
+import { file, message, user } from "../schema.js";
 
 type FileType = typeof file.$inferSelect;
 class Repository {
@@ -29,6 +29,37 @@ class Repository {
     const result = await db.query.file.findFirst({
       where: (fields, { eq }) => eq(fields.messageId, args.messageId),
     });
+
+    return result;
+  }
+
+  /** Every file attached to a message in the conversation, newest first. */
+  async getFilesByConversationId(args: {
+    conversationId: string;
+    organizationId: string;
+  }) {
+    const result = await db
+      .select({
+        id: file.id,
+        publicId: file.publicId,
+        messageId: file.messageId,
+        createdAt: file.createdAt,
+        sender: {
+          id: user.id,
+          name: user.name,
+          image: user.image,
+        },
+      })
+      .from(file)
+      .innerJoin(message, eq(message.id, file.messageId))
+      .innerJoin(user, eq(user.id, message.senderId))
+      .where(
+        and(
+          eq(message.conversationId, args.conversationId),
+          eq(message.organizationId, args.organizationId),
+        ),
+      )
+      .orderBy(desc(file.createdAt));
 
     return result;
   }

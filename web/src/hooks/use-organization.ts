@@ -77,5 +77,111 @@ export function useOrganizationClient() {
     }
   }
 
-  return { listOrganizations, createOrganization };
+  async function listWorkspaceMembers({
+    token,
+    organizationId,
+  }: {
+    token: string;
+    organizationId: string;
+  }) {
+    const res = await axiosClient.get("/organization/members", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-organization-id": organizationId,
+      },
+    });
+
+    return res.data as {
+      message: string;
+      code: number;
+      result: IWorkspaceMembers;
+    };
+  }
+
+  async function updateWorkspaceMemberRole({
+    token,
+    organizationId,
+    memberId,
+    role,
+  }: {
+    token: string;
+    organizationId: string;
+    memberId: string;
+    role: "admin" | "member";
+  }) {
+    const res = await axiosClient.patch(
+      "/organization/member/role",
+      { memberId, role },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "X-organization-id": organizationId,
+        },
+      },
+    );
+
+    return res.data as { message: string; code: number };
+  }
+
+  async function updateWorkspaceMemberAccess({
+    token,
+    organizationId,
+    userId,
+    config,
+  }: {
+    token: string;
+    organizationId: string;
+    userId: string;
+    config: Partial<OrgAccess>;
+  }) {
+    const res = await axiosClient.patch(
+      "/organization/member/access",
+      { userId, config },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "X-organization-id": organizationId,
+        },
+      },
+    );
+
+    return res.data as {
+      message: string;
+      code: number;
+      result: {
+        userId: string;
+        access: OrgAccess;
+        overrides: Partial<OrgAccess>;
+      };
+    };
+  }
+
+  async function removeWorkspaceMember({
+    token,
+    organizationId,
+    memberId,
+  }: {
+    token: string;
+    organizationId: string;
+    memberId: string;
+  }) {
+    const res = await axiosClient.delete("/organization/member", {
+      data: { memberId },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-organization-id": organizationId,
+      },
+    });
+
+    return res.data as { message: string; code: number };
+  }
+
+  return {
+    listOrganizations,
+    createOrganization,
+    listWorkspaceMembers,
+    updateWorkspaceMemberRole,
+    updateWorkspaceMemberAccess,
+    removeWorkspaceMember,
+  };
 }

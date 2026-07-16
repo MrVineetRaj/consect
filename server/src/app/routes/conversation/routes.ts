@@ -19,6 +19,16 @@ import {
   BrowseChannelsHeadersSchema,
   JoinChannelInputSchema,
   JoinChannelHeadersSchema,
+  GetConversationDetailsInputSchema,
+  GetConversationDetailsHeadersSchema,
+  ListConversationFilesInputSchema,
+  ListConversationFilesHeadersSchema,
+  UpdateMemberRoleInputSchema,
+  UpdateMemberRoleHeadersSchema,
+  UpdateMemberAccessInputSchema,
+  UpdateMemberAccessHeadersSchema,
+  RemoveMemberInputSchema,
+  RemoveMemberHeadersSchema,
 } from "./schema.js";
 
 export const CONVERSATION_BASE_PATH = "/api/v1/conversation";
@@ -45,6 +55,16 @@ api.get("/recent", authMiddleware, {
   tags: ["Conversation"],
 });
 
+api.get("/dms", authMiddleware, {
+  schema: ListRecentConversationsInputSchema,
+  response: CreateNewConversationResponseSchema,
+  headers: ListRecentConversationsHeadersSchema,
+  auth: true,
+  handler: controller.listGroupsAndDMs.bind(controller),
+  summary: "All groups and DMs of the user (no recency cutoff)",
+  tags: ["Conversation"],
+});
+
 api.get("/browse", authMiddleware, {
   schema: BrowseChannelsInputSchema,
   response: CreateNewConversationResponseSchema,
@@ -62,6 +82,56 @@ api.post("/join", authMiddleware, {
   auth: true,
   handler: controller.joinChannel.bind(controller),
   summary: "Join a public or unlisted channel",
+  tags: ["Conversation"],
+});
+
+api.get("/details", authMiddleware, {
+  schema: GetConversationDetailsInputSchema,
+  response: CreateNewConversationResponseSchema,
+  headers: GetConversationDetailsHeadersSchema,
+  auth: true,
+  handler: controller.getConversationDetails.bind(controller),
+  summary: "Conversation details with members and their channel access",
+  tags: ["Conversation"],
+});
+
+api.get("/files", authMiddleware, {
+  schema: ListConversationFilesInputSchema,
+  response: CreateNewConversationResponseSchema,
+  headers: ListConversationFilesHeadersSchema,
+  auth: true,
+  handler: controller.listConversationFiles.bind(controller),
+  summary: "Files shared in a conversation",
+  tags: ["Conversation"],
+});
+
+api.patch("/member/role", authMiddleware, {
+  schema: UpdateMemberRoleInputSchema,
+  response: CreateNewConversationResponseSchema,
+  headers: UpdateMemberRoleHeadersSchema,
+  auth: true,
+  handler: controller.updateMemberRole.bind(controller),
+  summary: "Change a conversation member's role",
+  tags: ["Conversation"],
+});
+
+api.patch("/member/access", authMiddleware, {
+  schema: UpdateMemberAccessInputSchema,
+  response: CreateNewConversationResponseSchema,
+  headers: UpdateMemberAccessHeadersSchema,
+  auth: true,
+  handler: controller.updateMemberAccess.bind(controller),
+  summary: "Override a member's per-channel access capabilities",
+  tags: ["Conversation"],
+});
+
+api.delete("/member", authMiddleware, {
+  schema: RemoveMemberInputSchema,
+  response: CreateNewConversationResponseSchema,
+  headers: RemoveMemberHeadersSchema,
+  auth: true,
+  handler: controller.removeMember.bind(controller),
+  summary: "Remove a member from a conversation",
   tags: ["Conversation"],
 });
 

@@ -10,8 +10,21 @@ import type {
   UpdateResourceMetaPropType,
 } from "./schema.js";
 
+/** 403 unless the requester holds the org-level `aiHubWrite` capability. */
+const deniedAiHubWrite = (accessConfig: {
+  organization?: Record<string, boolean>;
+} | null | undefined) =>
+  accessConfig?.organization?.aiHubWrite !== true
+    ? new HttpResponse({
+        code: ResponseCodes.FORBIDDEN,
+        message: "You are not allowed to manage AI Hub resources",
+      })
+    : null;
+
 class Controller {
-  async createResource({ ctx, body }: CreateResourcePropType) {
+  async createResource({ ctx, body, accessConfig }: CreateResourcePropType) {
+    const denied = deniedAiHubWrite(accessConfig);
+    if (denied) return denied;
     // Persist the source on Cloudinary first; `content` is a URL, pasted text,
     // or a base64 data URI of an uploaded file (see the web upload form).
     const { publicId, secureURL } = await cloudinaryClient.uploadResource({
@@ -62,7 +75,14 @@ class Controller {
     });
   }
 
-  async updateResourceMeta({ ctx, body }: UpdateResourceMetaPropType) {
+  async updateResourceMeta({
+    ctx,
+    body,
+    accessConfig,
+  }: UpdateResourceMetaPropType) {
+    const denied = deniedAiHubWrite(accessConfig);
+    if (denied) return denied;
+
     const resource = await aiHubResourceRepository.getResourceById({
       id: body.id,
     });
@@ -118,7 +138,10 @@ class Controller {
     });
   }
 
-  async deleteResource({ body }: DeleteResourcePropType) {
+  async deleteResource({ body, accessConfig }: DeleteResourcePropType) {
+    const denied = deniedAiHubWrite(accessConfig);
+    if (denied) return denied;
+
     // Drop the underlying Cloudinary asset before removing the row so we don't
     // orphan it; the public id is only recoverable while the row still exists.
     const resource = await aiHubResourceRepository.getResourceById({
