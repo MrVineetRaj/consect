@@ -1,12 +1,16 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
 import { generateBase64String } from "../../lib/utils.js";
+import { SYSTEM_BOT } from "../../lib/constants.js";
 import { db } from "../connection.js";
-import { conversation, conversationMember } from "../schema.js";
+import { conversation, conversationMember, message } from "../schema.js";
 
 type ConversationMemberType = typeof conversationMember.$inferSelect;
 class Repository {
   async createNewConversationMember(
-    args: Omit<ConversationMemberType, "id" | "createdAt" | "updatedAt">,
+    args: Omit<
+      ConversationMemberType,
+      "id" | "createdAt" | "updatedAt" | "lastReadAt"
+    >,
   ) {
     const [newConversationMember] = await db
       .insert(conversationMember)
@@ -83,6 +87,16 @@ class Repository {
     return result.map((r) => r.userId);
   }
 
+  /** Just the member user ids — for fan-out paths that don't need user rows. */
+  async getConversationMemberUserIds(args: { conversationId: string }) {
+    const result = await db
+      .select({ userId: conversationMember.userId })
+      .from(conversationMember)
+      .where(eq(conversationMember.conversationId, args.conversationId));
+
+    return result.map((r) => r.userId);
+  }
+
   async getConversationMembersByConversationId(args: {
     conversationId: string;
   }) {
@@ -107,6 +121,63 @@ class Repository {
       .returning();
 
     return updatedConversationMember;
+  }
+
+  /** Everything up to now counts as read for this member. */
+  async markConversationRead(args: {
+    userId: string;
+    conversationId: string;
+  }) {
+    const [updated] = await db
+      .update(conversationMember)
+      .set({ lastReadAt: new Date() })
+      .where(
+        and(
+          eq(conversationMember.userId, args.userId),
+          eq(conversationMember.conversationId, args.conversationId),
+        ),
+      )
+      .returning();
+
+    return updated;
+  }
+
+  /**
+   * conversationId -> messages sent by others since the member last read, for
+   * every conversation the user belongs to in the workspace.
+   */
+  async getUnreadCounts(args: { userId: string; organizationId: string }) {
+    const rows = await db
+      .select({
+        conversationId: conversationMember.conversationId,
+        unreadCount: sql<number>`count(${message.id})::int`,
+      })
+      .from(conversationMember)
+      .innerJoin(
+        conversation,
+        eq(conversation.id, conversationMember.conversationId),
+      )
+      .leftJoin(
+        message,
+        and(
+          eq(message.conversationId, conversationMember.conversationId),
+          gt(message.createdAt, conversationMember.lastReadAt),
+          ne(message.senderId, args.userId),
+          // "X joined" announcements don't badge anyone.
+          ne(message.senderId, SYSTEM_BOT.id),
+        ),
+      )
+      .where(
+        and(
+          eq(conversationMember.userId, args.userId),
+          eq(conversation.organizationId, args.organizationId),
+        ),
+      )
+      .groupBy(conversationMember.conversationId);
+
+    const counts: Record<string, number> = {};
+    for (const row of rows) counts[row.conversationId] = row.unreadCount;
+    return counts;
   }
 
   /** Drop a user from every conversation of one workspace (org removal). */

@@ -67,7 +67,7 @@ class Controller {
     });
   }
 
-  async listMessages({ ctx }: ListMessagesPropType) {
+  async listMessages({ ctx, query }: ListMessagesPropType) {
     const memberShip =
       await conversationMemberRepository.getConversationMembershipOfUser({
         userId: ctx.userId,
@@ -80,9 +80,11 @@ class Controller {
         message: "You are not member of this conversation",
       });
     }
-    const result = await messageRepository.getMessagesByConversationId({
+    const result = await messageRepository.getMessagePage({
       conversationId: ctx.conversationId,
       organizationId: ctx.organizationId,
+      before: query.before,
+      limit: query.limit,
     });
 
     return new HttpResponse({

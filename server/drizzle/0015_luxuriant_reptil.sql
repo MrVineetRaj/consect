@@ -1,0 +1,1 @@
+ALTER TABLE "conversation_member" ADD COLUMN "last_read_at" timestamp DEFAULT now() NOT NULL;

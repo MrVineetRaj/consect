@@ -22,6 +22,7 @@ import type {
   ListConversationFilesPropType,
   ListConversationMemberPropType,
   ListRecentConversationsPropType,
+  MarkConversationReadPropType,
   RemoveMemberPropType,
   RespondInvitePropType,
   SendInvitePropType,
@@ -175,21 +176,33 @@ class Controller {
   }
 
   async listRecentConversations({ ctx }: ListRecentConversationsPropType) {
-    const channels = await conversationRepository.getUserChannels({
-      userId: ctx.userId,
-      organizationId: ctx.organizationId,
-    });
-    const dmAndGroups = await conversationRepository.getUserRecentGroupsAndDMs({
-      userId: ctx.userId,
-      organizationId: ctx.organizationId,
-    });
+    const [channels, dmAndGroups, unreadCounts] = await Promise.all([
+      conversationRepository.getUserChannels({
+        userId: ctx.userId,
+        organizationId: ctx.organizationId,
+      }),
+      conversationRepository.getUserRecentGroupsAndDMs({
+        userId: ctx.userId,
+        organizationId: ctx.organizationId,
+      }),
+      conversationMemberRepository.getUnreadCounts({
+        userId: ctx.userId,
+        organizationId: ctx.organizationId,
+      }),
+    ]);
 
     return new HttpResponse({
       code: ResponseCodes.SUCCESS,
       message: "Fetched Channels and Recent groups and DMs",
       result: {
-        channels,
-        dmAndGroups,
+        channels: channels.map((c) => ({
+          ...c,
+          unreadCount: unreadCounts[c.id] ?? 0,
+        })),
+        dmAndGroups: dmAndGroups.map((c) => ({
+          ...c,
+          unreadCount: unreadCounts[c.id] ?? 0,
+        })),
       },
     });
   }
@@ -199,15 +212,47 @@ class Controller {
    * /recent. Backs the DM page sidebar.
    */
   async listGroupsAndDMs({ ctx }: ListRecentConversationsPropType) {
-    const dmAndGroups = await conversationRepository.getUserGroupsAndDMs({
-      userId: ctx.userId,
-      organizationId: ctx.organizationId,
-    });
+    const [dmAndGroups, unreadCounts] = await Promise.all([
+      conversationRepository.getUserGroupsAndDMs({
+        userId: ctx.userId,
+        organizationId: ctx.organizationId,
+      }),
+      conversationMemberRepository.getUnreadCounts({
+        userId: ctx.userId,
+        organizationId: ctx.organizationId,
+      }),
+    ]);
 
     return new HttpResponse({
       code: ResponseCodes.SUCCESS,
       message: "Fetched all groups and DMs",
-      result: { dmAndGroups },
+      result: {
+        dmAndGroups: dmAndGroups.map((c) => ({
+          ...c,
+          unreadCount: unreadCounts[c.id] ?? 0,
+        })),
+      },
+    });
+  }
+
+  /** Reset the caller's unread state for one conversation. */
+  async markConversationRead({ ctx }: MarkConversationReadPropType) {
+    const updated = await conversationMemberRepository.markConversationRead({
+      userId: ctx.userId,
+      conversationId: ctx.conversationId,
+    });
+
+    if (!updated) {
+      return new HttpResponse({
+        code: ResponseCodes.FORBIDDEN,
+        message: "You are not member of this conversation",
+      });
+    }
+
+    return new HttpResponse({
+      code: ResponseCodes.SUCCESS,
+      message: "Conversation marked as read",
+      result: { lastReadAt: updated.lastReadAt },
     });
   }
 

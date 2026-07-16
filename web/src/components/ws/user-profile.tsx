@@ -12,6 +12,7 @@ import {
   CalendarIcon,
   MailIcon,
   MessageSquareIcon,
+  PhoneIcon,
   ShieldIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -70,15 +71,31 @@ export const UserProfileView = ({
       setDmPending(false);
     }
   }
+  async function handleCall() {
+    if (!token) return;
+    try {
+      // DMs are idempotent server-side — this returns the existing one.
+      // const { result } = await createConversation({
+      //   token,
+      //   organizationId,
+      //   type: "dm",
+      //   memberIds: [member.userId],
+      // });
+      // router.push(`/ws/dm/${result.id}`);
+    } catch {
+      toast.error("Failed to open conversation");
+      setDmPending(false);
+    }
+  }
 
   return (
     <div className="mx-auto flex h-full w-full max-w-2xl flex-col gap-5 overflow-y-auto p-5">
       <div>
-        <Button variant="ghost" size="sm" asChild>
+        {/* <Button variant="ghost" size="sm" asChild>
           <Link href="/ws/members">
             <ArrowLeftIcon /> Members
           </Link>
-        </Button>
+        </Button> */}
       </div>
 
       <div className="flex flex-col items-center gap-4 rounded-2xl border border-border/60 bg-card/50 px-6 py-10 text-center">
@@ -124,14 +141,20 @@ export const UserProfileView = ({
         </Badge>
 
         {!isSelf && (
-          <Button onClick={handleOpenDm} disabled={dmPending} className="mt-1">
-            {dmPending ? (
-              <Spinner className="size-4" />
-            ) : (
-              <MessageSquareIcon />
-            )}
-            Message
-          </Button>
+          <div>
+            <Button
+              onClick={handleOpenDm}
+              disabled={dmPending}
+              className="mt-1"
+            >
+              {dmPending ? (
+                <Spinner className="size-4" />
+              ) : (
+                <MessageSquareIcon />
+              )}
+              Message
+            </Button>
+          </div>
         )}
       </div>
 

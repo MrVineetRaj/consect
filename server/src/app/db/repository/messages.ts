@@ -91,6 +91,63 @@ class Repository {
     return result.reverse();
   }
 
+  /**
+   * Keyset-paginated page of a conversation's messages, newest first, walked
+   * backwards from `before` (a message id). `createdAt` ties are broken by id
+   * so the cursor never skips or repeats rows. Returned ascending for display.
+   */
+  async getMessagePage({
+    conversationId,
+    organizationId,
+    before,
+    limit = 50,
+  }: {
+    conversationId: string;
+    organizationId: string;
+    before?: string | undefined;
+    limit?: number;
+  }) {
+    if (before) {
+      const cursor = await db.query.message.findFirst({
+        columns: { id: true },
+        where: (fields, { eq, and }) =>
+          and(
+            eq(fields.id, before),
+            eq(fields.conversationId, conversationId),
+            eq(fields.organizationId, organizationId),
+          ),
+      });
+      // An unknown cursor yields an empty page rather than restarting from
+      // the newest messages, which would hand out duplicates.
+      if (!cursor) return { messages: [], nextCursor: null, hasMore: false };
+    }
+
+    const rows = await db.query.message.findMany({
+      where: (fields, { eq, and }) =>
+        and(
+          eq(fields.conversationId, conversationId),
+          eq(fields.organizationId, organizationId),
+          // Row-value comparison against the cursor row, resolved fully in
+          // SQL: round-tripping created_at through a JS Date truncates the
+          // column's microseconds and skips same-millisecond rows.
+          before
+            ? sql`(${fields.createdAt}, ${fields.id}) < (SELECT c.created_at, c.id FROM ${message} AS c WHERE c.id = ${before})`
+            : undefined,
+        ),
+      with: {
+        sender: true,
+      },
+      limit: limit + 1,
+      orderBy: [desc(message.createdAt), desc(message.id)],
+    });
+
+    const hasMore = rows.length > limit;
+    const page = rows.slice(0, limit);
+    const nextCursor = hasMore ? (page[page.length - 1]?.id ?? null) : null;
+
+    return { messages: page.reverse(), nextCursor, hasMore };
+  }
+
   async getMessagesByParentMessageId(args: {
     conversationId: string;
     parentMessageId: string;

@@ -60,6 +60,26 @@ export const ListRecentConversationsHeadersSchema = z.object({
     description: "Organization the conversation belongs to.",
   }),
 });
+export const MarkConversationReadInputSchema = z.object({
+  ctx: z.object({
+    conversationId: z.string().nonempty(),
+    organizationId: z.string().nonempty(),
+    userId: z.string(),
+  }),
+});
+export type MarkConversationReadPropType = z.infer<
+  typeof MarkConversationReadInputSchema
+>;
+
+export const MarkConversationReadHeadersSchema = z.object({
+  [HeaderKeys.conversationId]: z.string().meta({
+    description: "Conversation ID",
+  }),
+  [HeaderKeys.organizationId]: z.string().meta({
+    description: "Organization the conversation belongs to.",
+  }),
+});
+
 export const ListConversationMemberInputSchema = z.object({
   ctx: z.object({
     conversationId: z.string().nonempty(),

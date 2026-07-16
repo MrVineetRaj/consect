@@ -10,6 +10,29 @@ import io from "../../socket/socket-io.js";
 import { queryFromEmbedding } from "../../workflow/query-from-embedding.js";
 
 /**
+ * Nudge every member's personal socket room (joined on `mark_online`) so
+ * sidebars can bump unread badges even for conversations whose room the
+ * client hasn't joined. The sender is skipped — nothing is unread for them.
+ */
+export async function emitConversationActivity(args: {
+  conversationId: string;
+  senderId: string;
+}) {
+  const memberIds =
+    await conversationMemberRepository.getConversationMemberUserIds({
+      conversationId: args.conversationId,
+    });
+
+  for (const userId of memberIds) {
+    if (userId === args.senderId) continue;
+    io.to(userId).emit("conversation_activity", {
+      conversationId: args.conversationId,
+      senderId: args.senderId,
+    });
+  }
+}
+
+/**
  * Post-send fan-out for a new message:
  * - mentioned users who are already in the conversation get a `mention`
  *   notification;
@@ -25,6 +48,11 @@ export async function fanOutMessageNotifications({
   body,
   messageId,
 }: CreateNewMessagePropType & { messageId: string }) {
+  await emitConversationActivity({
+    conversationId: ctx.conversationId,
+    senderId: ctx.userId,
+  });
+
   const mentionedUserIds = Array.from(new Set(body.mentions)).filter(
     (id) => id !== CONSECTO_BOT.id && id !== ctx.userId,
   );
@@ -201,5 +229,9 @@ export async function invokeLLMForMessage({
 
   io.to("convo_" + ctx.conversationId).emit("new_message", {
     message: result,
+  });
+  await emitConversationActivity({
+    conversationId: ctx.conversationId,
+    senderId: CONSECTO_BOT.id,
   });
 }
