@@ -2,13 +2,14 @@ import { createApiRouter } from "../../adapter/openapi.js";
 import { authMiddleware } from "../../middleware/auth.js";
 import { controller } from "./controller.js";
 import {
-  CreateNewConversationResponseSchema,
   CreateNewMessageHeadersSchema,
   CreateNewMessageInputSchema,
   DeleteMessageHeadersSchema,
   DeleteMessageInputSchema,
   ListMessagesHeadersSchema,
   ListMessagesInputSchema,
+  MessageListResponseSchema,
+  MessageResponseSchema,
   UpdateMessageHeadersSchema,
   UpdateMessageInputSchema,
 } from "./schema.js";
@@ -19,18 +20,18 @@ const api = createApiRouter(MESSAGE_BASE_PATH);
 
 api.post("/", authMiddleware, {
   schema: CreateNewMessageInputSchema,
-  response: CreateNewConversationResponseSchema,
+  response: MessageResponseSchema,
   headers: CreateNewMessageHeadersSchema,
   auth: true,
   handler: controller.newMessage.bind(controller),
-  summary: "Create a new conversation",
+  summary: "Create a new message",
   tags: ["Message"],
 });
 
 
 api.get("/", authMiddleware, {
   schema: ListMessagesInputSchema,
-  response: CreateNewConversationResponseSchema,
+  response: MessageListResponseSchema,
   headers: ListMessagesHeadersSchema,
   auth: true,
   handler: controller.listMessages.bind(controller),
@@ -40,21 +41,21 @@ api.get("/", authMiddleware, {
 
 api.patch("/", authMiddleware, {
   schema: UpdateMessageInputSchema,
-  response: CreateNewConversationResponseSchema,
+  response: MessageResponseSchema,
   headers: UpdateMessageHeadersSchema,
   auth: true,
   handler: controller.updateMessage.bind(controller),
-  summary: "Message Updated",
+  summary: "Update a message",
   tags: ["Message"],
 });
 
 api.delete("/", authMiddleware, {
   schema: DeleteMessageInputSchema,
-  response: CreateNewConversationResponseSchema,
+  response: MessageResponseSchema,
   headers: DeleteMessageHeadersSchema,
   auth: true,
   handler: controller.deleteMessage.bind(controller),
-  summary: "List conversation messages",
+  summary: "Delete a message",
   tags: ["Message"],
 });
 

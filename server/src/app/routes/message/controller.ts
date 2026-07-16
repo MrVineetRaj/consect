@@ -87,7 +87,7 @@ class Controller {
 
     return new HttpResponse({
       code: ResponseCodes.SUCCESS,
-      message: "Fetched Channels and Recent groups and DMs",
+      message: "Fetched conversation messages",
       result,
     });
   }
@@ -114,7 +114,7 @@ class Controller {
     });
     return new HttpResponse({
       code: ResponseCodes.SUCCESS,
-      message: "Message updated",
+      message: "Message deleted",
       result,
     });
   }

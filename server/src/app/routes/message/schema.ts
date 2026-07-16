@@ -19,22 +19,32 @@ export const CreateNewMessageHeadersSchema = z.object({
     description: "Organization the conversation belongs to.",
   }),
   [HeaderKeys.conversationId]: z.string().meta({
-    description: "Organization the conversation belongs to.",
+    description: "Conversation ID",
   }),
 });
 
-export const CreateNewConversationResponseSchema = z.object({
+export const MessageSchema = z.object({
+  id: z.string(),
+  senderId: z.string(),
+  conversationId: z.string(),
+  organizationId: z.string(),
+  parentMessageId: z.string().nullable(),
+  mentions: z.array(z.string()).nullable(),
+  content: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export const MessageResponseSchema = z.object({
   code: z.number(),
   message: z.string(),
-  result: z.object({
-    id: z.string(),
-    name: z.string(),
-    description: z.string().nullable(),
-    type: z.enum(["group", "dm", "channel"]),
-    organizationId: z.string(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
-  }),
+  result: MessageSchema,
+});
+
+export const MessageListResponseSchema = z.object({
+  code: z.number(),
+  message: z.string(),
+  result: z.array(MessageSchema),
 });
 
 export type CreateNewMessagePropType = z.infer<
